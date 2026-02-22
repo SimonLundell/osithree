@@ -178,6 +178,7 @@ export function resetScene() {
     osiBoundaries.clear();
     osiRoadMarkBoundaries.clear();
     osiStationaryObjects.clear();
+    osiTrafficLights.clear();
     movingObjectMap.clear();
     osiMovingObjects.clear();
 }
