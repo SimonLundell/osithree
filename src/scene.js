@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId } from "./utils";
+import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, fmt } from "./utils";
 import { cameraModes } from "./constants.js";
 
 const gtFrames = [];
@@ -13,6 +13,10 @@ const standardFollowOffset = new THREE.Vector3(-15, 0, 10);
 const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
+const osiSelectedObjId = document.getElementById('ObjectId');
+const osiSelectedObjPos = document.getElementById('ObjectPos');
+const osiSelectedObjSpeed = document.getElementById('ObjectSpeed');
+const osiSelectedObjAngle = document.getElementById('ObjectOrientation');
 
 let latestGt = null;
 let gtInitialized = false;
@@ -119,7 +123,7 @@ export function setupScene() {
             return;
         }
 
-        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(selectedVehicle.quaternion.clone().invert());
+        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(selectedVehicle.mesh.quaternion.clone().invert());
     });
 
     axesHelper = new THREE.AxesHelper(1000);
@@ -225,11 +229,19 @@ function followVehicle() {
         return;
     }
 
-    orbitTarget.copy(selectedVehicle.position);
+    osiSelectedObjId.textContent = selectedVehicle.osiObj.id.value?.toString() || '-';
+    const pos = selectedVehicle.osiObj.base.position;
+    const vel = selectedVehicle.osiObj.base.velocity;
+    const ori = selectedVehicle.osiObj.base.orientation;
+    osiSelectedObjPos.textContent = `${fmt(pos.x)}, ${fmt(pos.y)}, ${fmt(pos.z)}`;
+    osiSelectedObjSpeed.textContent = `${fmt(vel.x)}, ${fmt(vel.y)}, ${fmt(vel.z)}`; 
+    osiSelectedObjAngle.textContent =  `${fmt(ori.yaw)}, ${fmt(ori.pitch)}, ${fmt(ori.roll)}`; 
+
+    orbitTarget.copy(selectedVehicle.mesh.position);
     orbit.target.copy(orbitTarget);
 
     if (!userInteracting) {
-        const worldOffset = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
+        const worldOffset = followOffset.clone().applyQuaternion(selectedVehicle.mesh.quaternion);
 
         const desiredCameraPos =
             orbitTarget.clone().add(worldOffset);
@@ -242,10 +254,10 @@ function resetFollowCamera() {
     cameraMode = cameraModes.FOLLOW;
     
     followOffset.copy(standardFollowOffset);
-    orbitTarget.copy(selectedVehicle.position);
+    orbitTarget.copy(selectedVehicle.mesh.position);
     orbit.target.copy(orbitTarget);
     
-    const offsetWorld = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
+    const offsetWorld = followOffset.clone().applyQuaternion(selectedVehicle.mesh.quaternion);
     camera.position.copy(orbitTarget).add(offsetWorld);
     orbit.update();
 }

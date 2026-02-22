@@ -31,6 +31,10 @@
         gap: 10px;
         font-size: 0.9em;
       }
+      #ObjectId,
+      #ObjectPos,
+      #ObjectSpeed,
+      #ObjectOrientation,
       #osiTimestamp,
       #projString,
       #mapReference,
@@ -44,7 +48,7 @@
       .ui {
         display: flex;
         align-items: flex-start;
-        height: 64px;
+        height: 74px;
         background-color: rgba(34, 34, 34);
         padding: 12px 16px;
         font-family: sans-serif;
@@ -74,6 +78,15 @@
         font-size: 0.9em;
       }
 
+      .metaCenterRight {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin: 0 auto;
+        min-width: 250px;
+        font-size: 0.9em;
+      }
+
       .metaRight {
         display: flex;
         flex-direction: column;
@@ -82,6 +95,8 @@
         justify-content: flex-end;
         height: 100%;
         font-size: 0.9em;
+        min-width: 250px;
+        text-align: right;
       }
 
       /* Right content */
@@ -120,6 +135,25 @@
         <div class="metaRow">
           <span class="label">projString:</span>
           <span id="projString"></span>
+        </div>
+      </div>
+
+      <div class="metaCenterRight">
+        <div class="metaRow">
+          <span class="label">ObjectId:</span>
+          <span id="ObjectId"></span>
+        </div>
+        <div class="metaRow">
+          <span class="label">ObjectPos (x,y,z):</span>
+          <span id="ObjectPos"></span>
+        </div>
+        <div class="metaRow">
+          <span class="label">ObjectSpeed (x,y,z):</span>
+          <span id="ObjectSpeed"></span>
+        </div>
+        <div class="metaRow">
+          <span class="label">ObjectAngle (h,p,r):</span>
+          <span id="ObjectOrientation"></span>
         </div>
       </div>
 

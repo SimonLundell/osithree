@@ -32,6 +32,10 @@ export function updateFromGroundTruth(gt) {
     });
 }
 
+export function fmt(n, digits = 3) {
+    return Number(n).toFixed(digits);
+}
+
 function updateTimestamp(seconds, nanos) {
     const nanoStr = String(nanos).padStart(9, '0');
     osiTimestampEl.textContent = `seconds: ${seconds} nanos: ${nanoStr}`
@@ -89,7 +93,10 @@ function initMovingObjs(movingObject) {
         
         setPosAndAngle(box, obj.base);
 
-        movingObjectMap.set(obj.id.value, box);
+        movingObjectMap.set(obj.id.value, {
+            mesh: box,
+            osiObj: obj
+        });
     });
 }
 
@@ -302,11 +309,12 @@ function updateTrafficLight(tl) {
 }
 
 function updateMovingObj(obj) {
-    const mesh = movingObjectMap.get(obj.id.value);
-    if (mesh) {
-        setPosAndAngle(mesh, obj.base);
-        mesh.material.wireframe = options.wireframe;
+    const mapObj = movingObjectMap.get(obj.id.value);
+    if (mapObj.mesh) {
+        setPosAndAngle(mapObj.mesh, obj.base);
+        mapObj.mesh.material.wireframe = options.wireframe;
     }
+    mapObj.osiObj = obj;
 }
 
 function addEdges(mesh, color = 0x000000) {
