@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package osi3;
+
+message InterfaceVersion
+{
+    // Major version number.
+    //
+    uint32 version_major = 1;
+
+    // Minor version number.
+    //
+    uint32 version_minor = 2;
+
+    // Patch version number.
+    //
+    uint32 version_patch = 3;
+}

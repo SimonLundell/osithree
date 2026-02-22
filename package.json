@@ -1,0 +1,19 @@
+{
+  "name": "osiviewer-vite-js",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "dat.gui": "^0.7.9",
+    "protobufjs": "^8.0.0",
+    "three": "^0.182.0"
+  }
+}

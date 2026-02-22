@@ -1,0 +1,25 @@
+
+export const laneBoundaryColor = new Map([
+    [3, 0xFFFFFF], // WHITE
+    [4, 0xFFFF00], // YELLOW
+    [5, 0xFF0000], // RED
+    [6, 0x0066FF], // BLUE
+    [7, 0x00FF00], // GREEN
+    [8, 0x9933FF], // VIOLET
+    [9, 0xFF8000], // ORANGE
+]);
+
+export const trafficLightColor = new Map([
+    [2, 0xFF0000], // RED
+    [3, 0xFFFF00], // YELLOW
+    [4, 0x00FF00], // GREEN
+    [5, 0x0066FF], // BLUE
+    [6, 0xFFFFFF], // WHITE
+]);
+
+export const basicBlack = 0x111111; 
+
+export const cameraModes = Object.freeze({
+    FOLLOW: 0,
+    FREE: 1
+});
