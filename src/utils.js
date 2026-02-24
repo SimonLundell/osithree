@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
+import { setCopyable } from "./uiUtils";
 import { FOVHelper } from "./fovhelper";
 
 const osiVersionEl = document.getElementById('osiVersion');
@@ -45,9 +46,9 @@ function initMetaData(gt) {
     osiVersionEl.textContent = `${gt.version.versionMajor}.${gt.version.versionMinor}.${gt.version.versionPatch}`;
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
     hostVehicleId = gt.hostVehicleId.value;
-    osiXodrModelReferenceEl.textContent = gt.modelReference?.toString() || '-';
-    osiMapReferenceEl.textContent = gt.mapReference?.toString() || '-';
-    osiProjStringEl.textContent = gt.projString?.toString() || '-';
+    setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
+    setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
+    setCopyable(osiProjStringEl, gt.projString?.toString());
 }
 
 function setPosAndAngle(mesh, base, offset = 0) {

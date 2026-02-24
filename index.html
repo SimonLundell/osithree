@@ -63,11 +63,33 @@
         gap: 6px;
         font-size: 0.9em;
       }
+
+      .metaRow .label {
+        flex: 0 0 auto;     /* label keeps its natural width */
+      }
+
+      .metaRow span:last-child {
+        flex: 1;            /* value takes remaining space */
+        min-width: 0;       /* VERY important for ellipsis in flex */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .metaLeft {
         display: flex;
         flex-direction: column;
         gap: 3px;
         font-size: 0.9em;
+      }
+
+      .metaCenterLeft {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin: 0 auto;
+        font-size: 0.9em;
+        max-width: 300px;
       }
 
       .metaCenter {
@@ -76,6 +98,7 @@
         gap: 3px;
         margin: 0 auto;
         font-size: 0.9em;
+        max-width: 400px;
       }
 
       .metaCenterRight {
@@ -106,6 +129,19 @@
         right: 0px
       }
 
+      .copyable {
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+
+      .copyable:hover {
+        text-decoration: underline;
+      }
+
+      .copyable.copied {
+        opacity: 0.6;
+      }
+
     </style>
   </head>
   <body>
@@ -123,18 +159,18 @@
         </div>
       </div>
 
-      <div class="metaCenter">
+      <div class="metaCenterLeft">
         <div class="metaRow">
           <span class="label">modelReference:</span>
-          <span id="xodrModelReference"></span>
+          <span id="xodrModelReference" class="copyable"></span>
         </div>
         <div class="metaRow">
           <span class="label">mapReference:</span>
-          <span id="mapReference"></span>
+          <span id="mapReference" class="copyable"></span>
         </div>
         <div class="metaRow">
           <span class="label">projString:</span>
-          <span id="projString"></span>
+          <span id="projString" class="copyable"></span>
         </div>
       </div>
 
