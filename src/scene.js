@@ -3,6 +3,7 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, fmt } from "./utils";
+import { positionGUI } from "./uiUtils.js";
 import { cameraModes } from "./constants.js";
 
 const gtFrames = [];
@@ -196,6 +197,7 @@ function animate() {
             if (selectedVehicle) {
                 resetFollowCamera();
             }
+            positionGUI();
             gtInitialized = true;
         } 
         else {

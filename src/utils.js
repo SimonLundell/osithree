@@ -9,6 +9,7 @@ const osiTimestampEl = document.getElementById('osiTimestamp');
 const osiXodrModelReferenceEl = document.getElementById('xodrModelReference');
 const osiMapReferenceEl = document.getElementById('mapReference');
 const osiProjStringEl = document.getElementById('projString');
+const osiEnvDataEl = document.getElementById('envData');
 
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
@@ -25,6 +26,7 @@ export function initFromGroundTruth(gt) {
 
 export function updateFromGroundTruth(gt) {
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
+    updateEnvironment(gt.environmentalConditions);
     gt.movingObject.forEach(obj => {
         updateMovingObj(obj);
     });
@@ -49,6 +51,7 @@ function initMetaData(gt) {
     setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
     setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
     setCopyable(osiProjStringEl, gt.projString?.toString());
+    updateEnvironment(gt.environmentalConditions);
 }
 
 function setPosAndAngle(mesh, base, offset = 0) {
@@ -157,6 +160,22 @@ function initLaneBoundaries(laneBoundaries) {
             osiBoundaries.add(strip);
         }
     });
+}
+
+function updateEnvironment(env) {
+
+    osiEnvDataEl.textContent = `
+        Illum: ${env.ambientIllumination}
+        Temp: ${env.temperature}
+        Press: ${env.atmosphericPressure}
+        Cloud: ${env.clouds?.fractionalCloudCover ?? 0}
+        Fog: ${env.fog}
+        Rain: ${env.precipitation}
+        Sun: az=${env.sun?.azimuth} el=${env.sun?.elevation} int=${env.sun?.intensity}
+        Wind: dir=${env.wind?.originDirection} spd=${env.wind?.speed}
+        Time: ${env.timeOfDay?.secondsSinceMidnight}
+        Unix: ${env.unixTimestamp}
+        `;
 }
 
 function initLanes(lanes) {

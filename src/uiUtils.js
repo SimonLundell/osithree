@@ -25,3 +25,16 @@ export function setCopyable(el, value) {
         }
     });
 }
+
+export function positionGUI() {
+    const banner = document.querySelector(".ui");
+    const gui = document.querySelector(".dg");
+
+    if (!banner || !gui) return;
+
+    const height = banner.getBoundingClientRect().height;
+    gui.style.top = height + "px";
+}
+
+window.addEventListener("resize", positionGUI);
+window.addEventListener("load", positionGUI);
