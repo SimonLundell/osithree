@@ -1,3 +1,4 @@
+// Copy-paste text macro
 export function setCopyable(el, value) {
 
     const fullText = value || "-";
@@ -26,6 +27,7 @@ export function setCopyable(el, value) {
     });
 }
 
+// datGui dynamic positioning
 export function positionGUI() {
     const banner = document.querySelector(".ui");
     const gui = document.querySelector(".dg");
@@ -38,3 +40,15 @@ export function positionGUI() {
 
 window.addEventListener("resize", positionGUI);
 window.addEventListener("load", positionGUI);
+
+// Environment data button
+const envToggle = document.getElementById("envToggle");
+const envPanel = document.getElementById("envPanel");
+
+let envOpen = false;
+envToggle.addEventListener("click", () => {
+    envOpen = !envOpen;
+
+    envPanel.classList.toggle("hidden", !envOpen);
+    envToggle.textContent = envOpen ? "×" : "Env. data";
+});

@@ -130,6 +130,58 @@
         opacity: 0.6;
       }
 
+      /* Fixed top container holding everything */
+      .topContainer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 20;
+        pointer-events: none;
+      }
+
+      .envToggleBtn {
+        position: absolute;
+        left: 16px;
+        top: 100%;
+        margin-top: 6px;
+
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.6);
+        font-size: 0.75em;
+        padding: 2px 6px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .envToggleBtn:hover {
+        color: white;
+        border-color: rgba(255,255,255,0.6);
+      }
+
+      .envPanel {
+        position: absolute;
+        left: 16px;
+        top: calc(100% + 32px);
+
+        max-width: 600px;
+        max-height: 400px;
+        overflow: auto;
+
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.85em;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      }
+
+      .hidden {
+        display: none;
+      }
+
     </style>
   </head>
   <body>
@@ -170,6 +222,13 @@
         </div>
       </div>
 
+      <button id="envToggle" class="envToggleBtn" title="Show Environment">
+        Env. data
+      </button>
+
+      <div id="envPanel" class="envPanel hidden">
+        <pre id="envJson"></pre>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
