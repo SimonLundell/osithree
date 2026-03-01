@@ -31,11 +31,6 @@
         gap: 10px;
         font-size: 0.9em;
       }
-      #envTitle,
-      #ObjectId,
-      #ObjectPos,
-      #ObjectSpeed,
-      #ObjectOrientation,
       #osiTimestamp,
       #projString,
       #mapReference,
@@ -54,13 +49,11 @@
       }
       .ui {
         display: flex;
-        align-items: flex-start;
-        background-color: rgba(0, 0, 0, 0.1);
+        align-items: stretch;   /* important */
+        background-color: rgba(34, 34, 34, 0.0);
         padding: 12px 16px;
-
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         color: rgb(220, 220, 220);
-
         position: relative;
         z-index: 10;
       }
@@ -102,36 +95,17 @@
         max-width: 300px;
       }
 
-      .metaCenter {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin: 0 auto;
-        max-width: 400px;
-      }
-
-      .metaCenterRight {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin: 0 auto;
-        min-width: 250px;
-      }
-
       .metaRight {
         display: flex;
         flex-direction: column;
-        gap: 3px;
         margin-left: auto;
-        justify-content: flex-end;
-        height: 100%;
-        min-width: 250px;
+        justify-content: flex-end;  /* pushes content to bottom */
+        align-items: flex-end;      /* right align */
         text-align: right;
+        min-width: 250px;
       }
 
-      .metaCenterLeft,
-      .metaCenter,
-      .metaCenterRight {
+      .metaCenterLeft {
         border-left: 1px solid rgba(255,255,255,0.08);
         padding-left: 16px;
       }
@@ -156,13 +130,6 @@
         opacity: 0.6;
       }
 
-      .envBlock {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        font-size: 0.9em;
-      }
-
     </style>
   </head>
   <body>
@@ -181,7 +148,7 @@
       </div>
 
       <div class="metaCenterLeft">
-        <div class="odrTitle">Road Information</div>
+        <div class="odrTitle">Road data</div>
         <div class="metaRow">
           <span class="label">modelReference:</span>
           <span id="xodrModelReference" class="copyable"></span>
@@ -196,37 +163,10 @@
         </div>
       </div>
 
-      <div class="metaCenter">
-        <div class="envBlock">
-          <div class="envTitle">Environment</div>
-          <div id="envData"></div>
-        </div>
-      </div>
-
-      <div class="metaCenterRight">
-        <div class="objTitle">Object Information</div>
-        <div class="metaRow">
-          <span class="label">ObjectId:</span>
-          <span id="ObjectId"></span>
-        </div>
-        <div class="metaRow">
-          <span class="label">ObjectPos (x,y,z):</span>
-          <span id="ObjectPos"></span>
-        </div>
-        <div class="metaRow">
-          <span class="label">ObjectSpeed (x,y,z):</span>
-          <span id="ObjectSpeed"></span>
-        </div>
-        <div class="metaRow">
-          <span class="label">ObjectAngle (h,p,r):</span>
-          <span id="ObjectOrientation"></span>
-        </div>
-      </div>
-
       <div class="metaRight">
         <div class="metaRow">
-          <span class="label">Timestamp</span>
-          <span id="osiTimestamp"> </span>
+          <span class="label">Timestamp:</span>
+          <span id="osiTimestamp" class="copyable"></span>
         </div>
       </div>
 

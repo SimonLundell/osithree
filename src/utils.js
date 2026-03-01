@@ -26,7 +26,7 @@ export function initFromGroundTruth(gt) {
 
 export function updateFromGroundTruth(gt) {
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
-    updateEnvironment(gt.environmentalConditions);
+    // updateEnvironment(gt.environmentalConditions);
     gt.movingObject.forEach(obj => {
         updateMovingObj(obj);
     });
@@ -51,7 +51,7 @@ function initMetaData(gt) {
     setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
     setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
     setCopyable(osiProjStringEl, gt.projString?.toString());
-    updateEnvironment(gt.environmentalConditions);
+    // updateEnvironment(gt.environmentalConditions);
 }
 
 function setPosAndAngle(mesh, base, offset = 0) {
@@ -139,7 +139,7 @@ function initLaneBoundaries(laneBoundaries) {
         
         let geometry = null;
         if (type == 4) { // DASHED LINES
-            geometry = buildDashedStripGeometry(points, width);
+            geometry = buildDashedStripGeometry(points, width, 0.015); // slightly above 
         }
         else {
             geometry = buildStripGeometry(points, width);
@@ -164,18 +164,26 @@ function initLaneBoundaries(laneBoundaries) {
 
 function updateEnvironment(env) {
 
-    osiEnvDataEl.textContent = `
-        Illum: ${env.ambientIllumination}
-        Temp: ${env.temperature}
-        Press: ${env.atmosphericPressure}
-        Cloud: ${env.clouds?.fractionalCloudCover ?? 0}
-        Fog: ${env.fog}
-        Rain: ${env.precipitation}
-        Sun: az=${env.sun?.azimuth} el=${env.sun?.elevation} int=${env.sun?.intensity}
-        Wind: dir=${env.wind?.originDirection} spd=${env.wind?.speed}
-        Time: ${env.timeOfDay?.secondsSinceMidnight}
-        Unix: ${env.unixTimestamp}
-        `;
+    const container = document.getElementById("envData");
+    container.innerHTML = "";
+
+    Object.entries(env).forEach(([key, value]) => {
+        const row = document.createElement("div");
+        row.className = "metaRow";
+
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = key + ":";
+
+        const val = document.createElement("span");
+        val.textContent = typeof value === "object"
+            ? JSON.stringify(value)
+            : value;
+
+        row.appendChild(label);
+        row.appendChild(val);
+        container.appendChild(row);
+    });
 }
 
 function initLanes(lanes) {

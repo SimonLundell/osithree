@@ -14,10 +14,10 @@ const standardFollowOffset = new THREE.Vector3(-15, 0, 10);
 const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
-const osiSelectedObjId = document.getElementById('ObjectId');
-const osiSelectedObjPos = document.getElementById('ObjectPos');
-const osiSelectedObjSpeed = document.getElementById('ObjectSpeed');
-const osiSelectedObjAngle = document.getElementById('ObjectOrientation');
+// const osiSelectedObjId = document.getElementById('ObjectId');
+// const osiSelectedObjPos = document.getElementById('ObjectPos');
+// const osiSelectedObjSpeed = document.getElementById('ObjectSpeed');
+// const osiSelectedObjAngle = document.getElementById('ObjectOrientation');
 
 let latestGt = null;
 let gtInitialized = false;
@@ -232,13 +232,13 @@ function followVehicle() {
         return;
     }
 
-    osiSelectedObjId.textContent = selectedVehicle.osiObj.id.value?.toString() || '-';
-    const pos = selectedVehicle.osiObj.base.position;
-    const vel = selectedVehicle.osiObj.base.velocity;
-    const ori = selectedVehicle.osiObj.base.orientation;
-    osiSelectedObjPos.textContent = `${fmt(pos.x)}, ${fmt(pos.y)}, ${fmt(pos.z)}`;
-    osiSelectedObjSpeed.textContent = `${fmt(vel.x)}, ${fmt(vel.y)}, ${fmt(vel.z)}`; 
-    osiSelectedObjAngle.textContent =  `${fmt(ori.yaw)}, ${fmt(ori.pitch)}, ${fmt(ori.roll)}`; 
+    // osiSelectedObjId.textContent = selectedVehicle.osiObj.id.value?.toString() || '-';
+    // const pos = selectedVehicle.osiObj.base.position;
+    // const vel = selectedVehicle.osiObj.base.velocity;
+    // const ori = selectedVehicle.osiObj.base.orientation;
+    // osiSelectedObjPos.textContent = `${fmt(pos.x)}, ${fmt(pos.y)}, ${fmt(pos.z)}`;
+    // osiSelectedObjSpeed.textContent = `${fmt(vel.x)}, ${fmt(vel.y)}, ${fmt(vel.z)}`; 
+    // osiSelectedObjAngle.textContent =  `${fmt(ori.yaw)}, ${fmt(ori.pitch)}, ${fmt(ori.roll)}`; 
 
     orbitTarget.copy(selectedVehicle.mesh.position);
     orbit.target.copy(orbitTarget);
