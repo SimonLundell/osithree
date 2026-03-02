@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, fmt } from "./utils";
+import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes } from "./utils";
 import { positionGUI } from "./uiUtils.js";
 import { cameraModes } from "./constants.js";
 
@@ -124,7 +124,7 @@ export function setupScene() {
             return;
         }
 
-        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(selectedVehicle.mesh.quaternion.clone().invert());
+        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(selectedVehicle.quaternion.clone().invert());
     });
 
     axesHelper = new THREE.AxesHelper(1000);
@@ -215,14 +215,6 @@ function animate() {
         options.play = true;
     }
 
-    rayCaster.setFromCamera(mousePosition, camera);
-    const intersects = rayCaster.intersectObjects(osiRoot.children, true);
-
-    if (intersects.length > 0) {
-        const mesh = intersects[0].object;
-        //console.log("Local pos:", mesh.position);
-    }
-
     orbit.update();
     renderer.render(scene, camera);
 }
@@ -240,11 +232,11 @@ function followVehicle() {
     // osiSelectedObjSpeed.textContent = `${fmt(vel.x)}, ${fmt(vel.y)}, ${fmt(vel.z)}`; 
     // osiSelectedObjAngle.textContent =  `${fmt(ori.yaw)}, ${fmt(ori.pitch)}, ${fmt(ori.roll)}`; 
 
-    orbitTarget.copy(selectedVehicle.mesh.position);
+    orbitTarget.copy(selectedVehicle.position);
     orbit.target.copy(orbitTarget);
 
     if (!userInteracting) {
-        const worldOffset = followOffset.clone().applyQuaternion(selectedVehicle.mesh.quaternion);
+        const worldOffset = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
 
         const desiredCameraPos =
             orbitTarget.clone().add(worldOffset);
@@ -257,10 +249,10 @@ function resetFollowCamera() {
     cameraMode = cameraModes.FOLLOW;
     
     followOffset.copy(standardFollowOffset);
-    orbitTarget.copy(selectedVehicle.mesh.position);
+    orbitTarget.copy(selectedVehicle.position);
     orbit.target.copy(orbitTarget);
     
-    const offsetWorld = followOffset.clone().applyQuaternion(selectedVehicle.mesh.quaternion);
+    const offsetWorld = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
     camera.position.copy(orbitTarget).add(offsetWorld);
     orbit.update();
 }
@@ -299,11 +291,34 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 })
 
-window.addEventListener('mousemove', e => {
+function updateMouse(e) {
+    // This returns the canvas position and size in screen space.
     const rect = renderer.domElement.getBoundingClientRect();
+    // normale -1 .. 1
     mousePosition.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mousePosition.y = (-(e.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+window.addEventListener('mousemove', e => {
+    updateMouse(e);
 })
+
+window.addEventListener("click", e => {
+
+    updateMouse(e); 
+
+    rayCaster.setFromCamera(mousePosition, camera);
+
+    const intersects = rayCaster.intersectObjects(clickableMeshes, false);
+
+    if (intersects.length === 0) return;
+
+    const mesh = intersects[0].object;
+    const osiObj = mesh.userData.osiObj;
+
+    console.log("Clicked:", osiObj);
+});
+
 
 window.addEventListener('keydown', onKeyDown);
 

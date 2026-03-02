@@ -13,6 +13,7 @@ const osiEnvDataEl = document.getElementById('envJson');
 
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
+export const clickableMeshes = [];
 export let hostVehicleId = null;
 
 export function initFromGroundTruth(gt) {
@@ -71,16 +72,16 @@ function initMovingObjs(movingObject) {
         const length = obj.base.dimension.length;
         const boxGeometry = new THREE.BoxGeometry(length, width, height);
         const boxMaterial = new THREE.MeshStandardMaterial({
-            color: 0xFF0000,
+            color: 0x1111AA,
             wireframe: false,
             transparent: true,
             opacity: 0.5
         });
-        const box = new THREE.Mesh(boxGeometry, boxMaterial);
-        addEdges(box);
+        const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+        addEdges(mesh);
         const axesHelper = new THREE.AxesHelper();
-        box.add(axesHelper);
-        box.add(refPoint());
+        mesh.add(axesHelper);
+        mesh.add(refPoint());
 
         /* Maybe fix later
         const fovHelper = new FOVHelper({
@@ -93,14 +94,13 @@ function initMovingObjs(movingObject) {
         box.add(fovHelper);
         */
 
-        osiMovingObjects.add(box);
+        osiMovingObjects.add(mesh);
         
-        setPosAndAngle(box, obj.base);
+        setPosAndAngle(mesh, obj.base);
+        mesh.userData.osiObj = obj;
 
-        movingObjectMap.set(obj.id.value, {
-            mesh: box,
-            osiObj: obj
-        });
+        movingObjectMap.set(obj.id.value, mesh);
+        clickableMeshes.push(mesh);
     });
 }
 
@@ -317,12 +317,12 @@ function updateTrafficLight(tl) {
 }
 
 function updateMovingObj(obj) {
-    const mapObj = movingObjectMap.get(obj.id.value);
-    if (mapObj.mesh) {
-        setPosAndAngle(mapObj.mesh, obj.base);
-        mapObj.mesh.material.wireframe = options.wireframe;
+    const mesh = movingObjectMap.get(obj.id.value);
+    if (mesh) {
+        setPosAndAngle(mesh, mesh.userData.osiObj.base);
+        mesh.material.wireframe = options.wireframe;
     }
-    mapObj.osiObj = obj;
+    mesh.userData.osiObj = obj;
 }
 
 function addEdges(mesh, color = 0x000000) {
