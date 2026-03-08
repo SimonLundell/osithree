@@ -31,6 +31,8 @@ let selectedVehicle = null;
 let userInteracting = false;
 let selectedObjectIndex = null;
 let cameraMode = cameraModes.FOLLOW;
+let intersections = [];
+let hoveredMesh = null;
 
 export const osiPoints = new THREE.Group(); // Container for osiPoints
 export const osiBoundaries = new THREE.Group(); // Container for osiBoundaries
@@ -224,14 +226,6 @@ function followVehicle() {
         return;
     }
 
-    // osiSelectedObjId.textContent = selectedVehicle.osiObj.id.value?.toString() || '-';
-    // const pos = selectedVehicle.osiObj.base.position;
-    // const vel = selectedVehicle.osiObj.base.velocity;
-    // const ori = selectedVehicle.osiObj.base.orientation;
-    // osiSelectedObjPos.textContent = `${fmt(pos.x)}, ${fmt(pos.y)}, ${fmt(pos.z)}`;
-    // osiSelectedObjSpeed.textContent = `${fmt(vel.x)}, ${fmt(vel.y)}, ${fmt(vel.z)}`; 
-    // osiSelectedObjAngle.textContent =  `${fmt(ori.yaw)}, ${fmt(ori.pitch)}, ${fmt(ori.roll)}`; 
-
     orbitTarget.copy(selectedVehicle.position);
     orbit.target.copy(orbitTarget);
 
@@ -301,20 +295,32 @@ function updateMouse(e) {
 
 window.addEventListener('mousemove', e => {
     updateMouse(e);
+
+    rayCaster.setFromCamera(mousePosition, camera);
+    intersections = rayCaster.intersectObjects(clickableMeshes, false);
+    
+    if (intersections.length > 0) {
+        const mesh = intersections[0].object;
+
+        if (mesh != hoveredMesh && hoveredMesh != null) {
+            hoveredMesh.material.emissive.set(0x000000);
+        }
+
+        hoveredMesh = mesh;
+        hoveredMesh.material.emissive.set(0x333333);
+    }
+    else if (hoveredMesh) {
+        hoveredMesh.material.emissive.set(0x000000);
+        hoveredMesh = null;
+    }
 })
 
 window.addEventListener("click", e => {
-
     updateMouse(e); 
 
-    rayCaster.setFromCamera(mousePosition, camera);
+    if (intersections.length === 0 || hoveredMesh == null) return;
 
-    const intersects = rayCaster.intersectObjects(clickableMeshes, false);
-
-    if (intersects.length === 0) return;
-
-    const mesh = intersects[0].object;
-    const osiObj = mesh.userData.osiObj;
+    const osiObj = hoveredMesh.userData.osiObj;
 
     console.log("Clicked:", osiObj);
 });
