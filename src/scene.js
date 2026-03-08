@@ -33,6 +33,7 @@ let selectedObjectIndex = null;
 let cameraMode = cameraModes.FOLLOW;
 let intersections = [];
 let hoveredMesh = null;
+let selectedMesh = null;
 
 export const osiPoints = new THREE.Group(); // Container for osiPoints
 export const osiBoundaries = new THREE.Group(); // Container for osiBoundaries
@@ -277,13 +278,13 @@ function stepBackward(steps) {
 stepController.onChange((value) => {
     frameIndex = Math.floor(value);
     options.play = false;
-})
+});
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-})
+});
 
 function updateMouse(e) {
     // This returns the canvas position and size in screen space.
@@ -291,40 +292,75 @@ function updateMouse(e) {
     // normale -1 .. 1
     mousePosition.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mousePosition.y = (-(e.clientY - rect.top) / rect.height) * 2 + 1;
-}
+};
 
-window.addEventListener('mousemove', e => {
+window.addEventListener("mousemove", (e) => {
+
     updateMouse(e);
 
     rayCaster.setFromCamera(mousePosition, camera);
-    intersections = rayCaster.intersectObjects(clickableMeshes, false);
-    
-    if (intersections.length > 0) {
-        const mesh = intersections[0].object;
+    const intersections = rayCaster.intersectObjects(clickableMeshes, false);
 
-        if (mesh != hoveredMesh && hoveredMesh != null) {
+    let newHovered = null;
+
+    if (intersections.length > 0) {
+        newHovered = intersections[0].object;
+    }
+
+    // Hover changed
+    if (newHovered !== hoveredMesh) {
+
+        // Remove hover glow from previous hovered
+        if (hoveredMesh && hoveredMesh !== selectedMesh) {
             hoveredMesh.material.emissive.set(0x000000);
         }
 
-        hoveredMesh = mesh;
-        hoveredMesh.material.emissive.set(0x333333);
+        hoveredMesh = newHovered;
+
+        // Add glow to new hovered
+        if (hoveredMesh) {
+            hoveredMesh.material.emissive.set(0x333333);
+        }
     }
-    else if (hoveredMesh) {
-        hoveredMesh.material.emissive.set(0x000000);
-        hoveredMesh = null;
-    }
-})
 
-window.addEventListener("click", e => {
-    updateMouse(e); 
-
-    if (intersections.length === 0 || hoveredMesh == null) return;
-
-    const osiObj = hoveredMesh.userData.osiObj;
-
-    console.log("Clicked:", osiObj);
 });
 
+window.addEventListener("mousedown", (e) => {
+    updateMouse(e);
+
+    rayCaster.setFromCamera(mousePosition, camera);
+    const intersections = rayCaster.intersectObjects(clickableMeshes, false);
+
+    // LEFT CLICK → select object
+    if (e.button === 0) {
+
+        if (intersections.length === 0) return;
+
+        const mesh = intersections[0].object;
+
+        if (selectedMesh && selectedMesh !== mesh) {
+            selectedMesh.material.emissive.set(0x000000);
+        }
+
+        selectedMesh = mesh;
+        selectedMesh.material.emissive.set(0x444444);
+
+        const osiObj = mesh.userData.osiObj;
+        console.log("Clicked:", osiObj);
+    }
+
+    // RIGHT CLICK → deselect if clicking empty space
+    if (e.button === 2) {
+
+        if (intersections.length === 0 && selectedMesh) {
+
+            selectedMesh.material.emissive.set(0x000000);
+            selectedMesh = null;
+
+            console.log("Selection cleared");
+        }
+    }
+});
 
 window.addEventListener('keydown', onKeyDown);
 
@@ -376,5 +412,10 @@ function onKeyDown(event) {
         case 'w':
             options.toggleWireframe();
             break;
+        case 'Escape':
+            if (selectedMesh) {
+                selectedMesh.material.emissive.set(0x000000);
+                selectedMesh = null;
+            }
     }
 }
