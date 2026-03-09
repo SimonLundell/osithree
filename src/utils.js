@@ -9,7 +9,6 @@ const osiTimestampEl = document.getElementById('osiTimestamp');
 const osiXodrModelReferenceEl = document.getElementById('xodrModelReference');
 const osiMapReferenceEl = document.getElementById('mapReference');
 const osiProjStringEl = document.getElementById('projString');
-const osiEnvDataEl = document.getElementById('envJson');
 
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
@@ -27,7 +26,7 @@ export function initFromGroundTruth(gt) {
 
 export function updateFromGroundTruth(gt) {
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
-    updateEnvironment(gt.environmentalConditions);
+    // updateEnvironment(gt.environmentalConditions);
     gt.movingObject.forEach(obj => {
         updateMovingObj(obj);
     });
@@ -52,7 +51,7 @@ function initMetaData(gt) {
     setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
     setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
     setCopyable(osiProjStringEl, gt.projString?.toString());
-    updateEnvironment(gt.environmentalConditions);
+    // updateEnvironment(gt.environmentalConditions);
 }
 
 function setPosAndAngle(mesh, base, offset = 0) {

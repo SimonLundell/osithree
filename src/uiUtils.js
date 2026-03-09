@@ -42,13 +42,16 @@ window.addEventListener("resize", positionGUI);
 window.addEventListener("load", positionGUI);
 
 // Environment data button
-const envToggle = document.getElementById("envToggle");
-const envPanel = document.getElementById("envPanel");
+const sidebar = document.getElementById("sidebar");
+const toggle = document.getElementById("sidebarToggle");
 
-let envOpen = false;
-envToggle.addEventListener("click", () => {
-    envOpen = !envOpen;
+toggle.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
 
-    envPanel.classList.toggle("hidden", !envOpen);
-    envToggle.textContent = envOpen ? "×" : "Env. data";
+    if (sidebar.classList.contains("collapsed")) {
+        toggle.textContent = "▶";
+    }
+    else {
+        toggle.textContent = "◀";
+    }
 });

@@ -100,16 +100,16 @@ export function addGroundTruth(gt) {
 export function setupScene() {
     scene.add(osiRoot);
     THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+    const viewer = document.getElementById("viewer");
     
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
     
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+    viewer.appendChild(renderer.domElement);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x222222)
     
-    document.body.appendChild(renderer.domElement);
-
     orbit = new OrbitControls(camera, renderer.domElement);
     orbit.target.set(0, 0, 0);
     orbit.dampingFactor = 0.08;
@@ -299,6 +299,8 @@ function updateMouse(e) {
 
 window.addEventListener("mousemove", (e) => {
 
+    if (!rayCaster) return;
+
     updateMouse(e);
 
     rayCaster.setFromCamera(mousePosition, camera);
@@ -333,6 +335,7 @@ window.addEventListener("mousemove", (e) => {
 });
 
 window.addEventListener("mousedown", (e) => {
+    if (!rayCaster) return;
     updateMouse(e);
 
     rayCaster.setFromCamera(mousePosition, camera);
