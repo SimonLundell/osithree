@@ -27,11 +27,10 @@ let camera = null;
 let renderer = null;
 let rayCaster = null;
 let axesHelper = null;
-let selectedVehicle = null;
+let cameraVehicle = null;
 let userInteracting = false;
 let selectedObjectIndex = null;
 let cameraMode = cameraModes.FOLLOW;
-let intersections = [];
 let hoveredMesh = null;
 let selectedMesh = null;
 
@@ -123,11 +122,11 @@ export function setupScene() {
     orbit.addEventListener('end', () => {
         userInteracting = false;
 
-        if (!selectedVehicle) {
+        if (!cameraVehicle) {
             return;
         }
 
-        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(selectedVehicle.quaternion.clone().invert());
+        followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(cameraVehicle.quaternion.clone().invert());
     });
 
     axesHelper = new THREE.AxesHelper(1000);
@@ -171,10 +170,12 @@ export function resetScene() {
     frameIndex = 0;
     orbit.update();
     camera.position.set(-5, -30, 20);
-    selectedVehicle = null;
+    cameraVehicle = null;
     userInteracting = null;
     selectedObjectIndex = null;
     cameraMode = cameraModes.FOLLOW;
+    hoveredMesh = null;
+    selectedMesh = null;
 
     stepController.setValue(frameIndex);
 
@@ -196,8 +197,10 @@ function animate() {
         if (!gtInitialized) {
             initFromGroundTruth(latestGt);
             console.log(latestGt);
-            selectedVehicle = movingObjectMap.get(hostVehicleId);
-            if (selectedVehicle) {
+            cameraVehicle = movingObjectMap.get(hostVehicleId);
+            if (cameraVehicle) {
+                selectedMesh = cameraVehicle;
+                selectedMesh.material.emissive.set(0x444444);
                 resetFollowCamera();
             }
             positionGUI();
@@ -223,15 +226,15 @@ function animate() {
 }
 
 function followVehicle() {
-    if (!selectedVehicle) {
+    if (!cameraVehicle) {
         return;
     }
 
-    orbitTarget.copy(selectedVehicle.position);
+    orbitTarget.copy(cameraVehicle.position);
     orbit.target.copy(orbitTarget);
 
     if (!userInteracting) {
-        const worldOffset = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
+        const worldOffset = followOffset.clone().applyQuaternion(cameraVehicle.quaternion);
 
         const desiredCameraPos =
             orbitTarget.clone().add(worldOffset);
@@ -244,10 +247,10 @@ function resetFollowCamera() {
     cameraMode = cameraModes.FOLLOW;
     
     followOffset.copy(standardFollowOffset);
-    orbitTarget.copy(selectedVehicle.position);
+    orbitTarget.copy(cameraVehicle.position);
     orbit.target.copy(orbitTarget);
     
-    const offsetWorld = followOffset.clone().applyQuaternion(selectedVehicle.quaternion);
+    const offsetWorld = followOffset.clone().applyQuaternion(cameraVehicle.quaternion);
     camera.position.copy(orbitTarget).add(offsetWorld);
     orbit.update();
 }
@@ -259,7 +262,7 @@ function selectNextVehicle(dir) {
     }
 
     selectedObjectIndex = (selectedObjectIndex + vehicles.length + dir) % vehicles.length;
-    selectedVehicle = vehicles[selectedObjectIndex];
+    cameraVehicle = vehicles[selectedObjectIndex];
 }
 
 function stepForward(steps) {
@@ -307,6 +310,10 @@ window.addEventListener("mousemove", (e) => {
         newHovered = intersections[0].object;
     }
 
+    if (newHovered !== null && newHovered === selectedMesh) {
+        return;
+    }
+
     // Hover changed
     if (newHovered !== hoveredMesh) {
 
@@ -319,7 +326,7 @@ window.addEventListener("mousemove", (e) => {
 
         // Add glow to new hovered
         if (hoveredMesh) {
-            hoveredMesh.material.emissive.set(0x333333);
+            hoveredMesh.material.emissive.set(0x111111);
         }
     }
 
@@ -350,6 +357,7 @@ window.addEventListener("mousedown", (e) => {
     }
 
     // RIGHT CLICK → deselect if clicking empty space
+    /*
     if (e.button === 2) {
 
         if (intersections.length === 0 && selectedMesh) {
@@ -360,6 +368,7 @@ window.addEventListener("mousedown", (e) => {
             console.log("Selection cleared");
         }
     }
+    */
 });
 
 window.addEventListener('keydown', onKeyDown);
