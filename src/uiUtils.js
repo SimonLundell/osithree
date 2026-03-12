@@ -27,31 +27,89 @@ export function setCopyable(el, value) {
     });
 }
 
-// datGui dynamic positioning
-export function positionGUI() {
-    const banner = document.querySelector(".ui");
-    const gui = document.querySelector(".dg");
+export function buildTree(parent, data, visited = new WeakSet()) {
 
-    if (!banner || !gui) return;
+    if (data === null || data === undefined) {
+        addLeaf(parent, String(data));
+        return;
+    }
 
-    const height = banner.getBoundingClientRect().height;
-    gui.style.top = height + "px";
+    // Prevent circular references
+    if (typeof data === "object") {
+        if (visited.has(data)) {
+            addLeaf(parent, "[circular]");
+            return;
+        }
+        visited.add(data);
+    }
+
+    // Arrays
+    if (Array.isArray(data)) {
+
+        data.forEach((item, i) => {
+
+            const node = addNode(parent, `[${i}]`);
+            buildTree(node, item, visited);
+
+        });
+
+        return;
+    }
+
+    // Objects
+    if (typeof data === "object") {
+
+        for (const key of Object.keys(data)) {
+
+            const value = data[key];
+
+            if (typeof value === "object" && value !== null) {
+
+                const node = addNode(parent, key);
+                buildTree(node, value, visited);
+
+            } else {
+
+                addLeaf(parent, `${key}: ${value}`);
+
+            }
+
+        }
+
+        return;
+    }
+
+    // Primitive
+    addLeaf(parent, String(data));
 }
 
-window.addEventListener("resize", positionGUI);
-window.addEventListener("load", positionGUI);
+export function addNode(parent, label) {
 
-// Environment data button
-const sidebar = document.getElementById("sidebar");
-const toggle = document.getElementById("sidebarToggle");
+    const li = document.createElement("li");
+    li.classList.add("node");
 
-toggle.addEventListener("click", () => {
-    sidebar.classList.toggle("collapsed");
+    const title = document.createElement("span");
+    title.textContent = label;
 
-    if (sidebar.classList.contains("collapsed")) {
-        toggle.textContent = "▶";
-    }
-    else {
-        toggle.textContent = "◀";
-    }
-});
+    const children = document.createElement("ul");
+
+    li.appendChild(title);
+    li.appendChild(children);
+
+    parent.appendChild(li);
+
+    title.addEventListener("click", e => {
+        li.classList.toggle("open");
+        e.stopPropagation();
+    });
+
+    return children;
+}
+
+function addLeaf(parent, label) {
+
+    const li = document.createElement("li");
+    li.textContent = label;
+
+    parent.appendChild(li);
+}

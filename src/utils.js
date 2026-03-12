@@ -1,14 +1,16 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
+import { buildTree, addNode } from "./uiUtils.js";
 import { setCopyable } from "./uiUtils";
 import { FOVHelper } from "./fovhelper";
 
-const osiVersionEl = document.getElementById('osiVersion');
+/*const osiVersionEl = document.getElementById('osiVersion');
 const osiTimestampEl = document.getElementById('osiTimestamp');
 const osiXodrModelReferenceEl = document.getElementById('xodrModelReference');
 const osiMapReferenceEl = document.getElementById('mapReference');
 const osiProjStringEl = document.getElementById('projString');
+*/
 
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
@@ -25,7 +27,7 @@ export function initFromGroundTruth(gt) {
 }
 
 export function updateFromGroundTruth(gt) {
-    updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
+    // updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
     // updateEnvironment(gt.environmentalConditions);
     gt.movingObject.forEach(obj => {
         updateMovingObj(obj);
@@ -45,12 +47,21 @@ function updateTimestamp(seconds, nanos) {
 }
 
 function initMetaData(gt) {
+    hostVehicleId = gt.hostVehicleId.value;
+    const tree = document.getElementById("gtTree");
+
+    tree.innerHTML = ""; // clear previous
+
+    const root = addNode(tree, "GroundTruth");
+
+    buildTree(root, gt);
+    /*
     osiVersionEl.textContent = `${gt.version.versionMajor}.${gt.version.versionMinor}.${gt.version.versionPatch}`;
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
-    hostVehicleId = gt.hostVehicleId.value;
     setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
     setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
     setCopyable(osiProjStringEl, gt.projString?.toString());
+    */
     // updateEnvironment(gt.environmentalConditions);
 }
 

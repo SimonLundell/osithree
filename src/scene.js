@@ -3,7 +3,6 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes } from "./utils";
-import { positionGUI } from "./uiUtils.js";
 import { cameraModes } from "./constants.js";
 
 const gtFrames = [];
@@ -104,9 +103,10 @@ export function setupScene() {
     
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
     
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(viewer.clientWidth, viewer.clientHeight);
     viewer.appendChild(renderer.domElement);
+    
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x222222)
     
@@ -203,7 +203,6 @@ function animate() {
                 selectedMesh.material.emissive.set(0x444444);
                 resetFollowCamera();
             }
-            positionGUI();
             gtInitialized = true;
         } 
         else {
@@ -284,9 +283,12 @@ stepController.onChange((value) => {
 });
 
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const viewer = document.getElementById("viewer");
+    const width = viewer.clientWidth;
+    const height = viewer.clientHeight;
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(width, height);
 });
 
 function updateMouse(e) {

@@ -6,307 +6,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>osiviewer-vite-js</title>
     <style>
-      html, body {
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgb(34, 34, 34);
-        overflow: hidden;
-      }
-      #viewer {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-      }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #222;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: rgb(220,220,220);
+}
 
-      #viewer canvas {
-        width: 100%;
-        height: 100%;
-        display: block;
-      }
-      .file-button {
-        display: inline-block;
-        padding: 8px 14px;
-        background-color: rgb(60, 60, 60);
-        color: white;
-        border-radius: 4px;
-        cursor: pointer;
-        font-family: sans-serif;
-        font-size: 0.9em;
-      }
-      .file-button:hover {
-        background-color: rgb(90, 90, 90);
-      }
-      .fileRow {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.9em;
-      }
-      #osiTimestamp,
-      #projString,
-      #mapReference,
-      #xodrModelReference,
-      #osiVersion,
-      #fileName {
-        margin-left: 1px;
-        color: rgb(200, 200, 200);
-        font-size: 0.9em;
-      }
-      .banner {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
+/* Main layout */
+#app {
+  display: flex;
+  height: 100vh;
+}
 
-        height: 90px;
+/* LEFT SIDEBAR */
 
-        display: flex;
-        align-items: stretch;
-        pointer-events: none;
+#sidebar {
+  width: 300px;
+  background: #1e1e1e;
+  border-right: 1px solid rgba(255,255,255,0.08);
 
-        padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+}
 
-        background: #1e1e1e;
+/* File loader row */
 
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        color: rgb(220,220,220);
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
 
-        z-index: 20;
-      }
-      .label {
-        color: rgb(150, 150, 150);
-      }
-      .metaRow,
-      .version {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9em;
-      }
+.file-button {
+  padding: 6px 12px;
+  background: rgb(60,60,60);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
 
-      .metaRow .label {
-        flex: 0 0 auto;     /* label keeps its natural width */
-      }
+.file-button:hover {
+  background: rgb(90,90,90);
+}
 
-      .metaRow span:last-child {
-        flex: 1;            /* value takes remaining space */
-        min-width: 0;       /* VERY important for ellipsis in flex */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+#fileName {
+  font-size: 0.9em;
+  color: rgb(200,200,200);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-      .metaLeft {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        max-width: 300px
-      }
+/* Tree container */
 
-      .metaCenterLeft {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin: 0 auto;
-        max-width: 300px;
-      }
+.treeContainer {
+  flex: 1;
+  overflow-y: auto;
+}
 
-      .metaRight {
-        display: flex;
-        flex-direction: column;
-        margin-left: auto;
-        justify-content: flex-end;  /* pushes content to bottom */
-        align-items: flex-end;      /* right align */
-        text-align: right;
-        min-width: 250px;
-      }
+/* Tree styling */
 
-      .metaCenterLeft {
-        border-left: 1px solid rgba(255,255,255,0.08);
-        padding-left: 16px;
-      }
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  font-size: 0.85em;
+}
 
-      /* Right content */
-      .dg {
-        position: absolute !important;
-        top: 114px;
-        right: 0px;
-        z-index: 25 !important;
-      }
+.tree li {
+  padding: 4px 12px;
+  cursor: pointer;
+}
 
-      .copyable {
-        cursor: pointer;
-        transition: opacity 0.15s ease;
-      }
+.tree li:hover {
+  background: rgba(255,255,255,0.05);
+}
 
-      .copyable:hover {
-        text-decoration: underline;
-      }
+/* Expand arrows */
 
-      .copyable.copied {
-        opacity: 0.6;
-      }
+.tree .node::before {
+  content: "▸";
+  display: inline-block;
+  width: 14px;
+  color: rgb(150,150,150);
+}
 
-      .hidden {
-        display: none;
-      }
+.tree .node.open::before {
+  content: "▾";
+}
 
-      .banner {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 90px;
-        background: #1e1e1e;
-      }
+/* Children */
 
-      .sidebar {
-        position: absolute;
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+  display: none;
+}
 
-        top: 90px;
-        left: 0;
-        bottom: 0;
+.tree .node.open > ul {
+  display: block;
+}
 
-        width: 300px;
+/* 3D viewer */
 
-        background: #202020;
-        border-right: 1px solid rgba(255,255,255,0.06);
+#viewer {
+  flex: 1;
+  position: relative;
+}
 
-        overflow-y: auto;
-
-        transition: transform 0.25s ease;
-
-        z-index: 15;
-      }
-
-      .sidebarHeader {
-        padding: 10px 12px;
-        font-size: 0.85em;
-        color: rgb(170,170,170);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-      }
-
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-      }
-
-      #sidebarToggle {
-        position: absolute;
-
-        top: 96px;
-        left: 6px;
-
-        z-index: 30;
-
-        background: #2a2a2a;
-        border: 1px solid rgba(255,255,255,0.15);
-
-        color: rgba(255,255,255,0.7);
-
-        font-size: 11px;
-
-        padding: 2px 6px;
-
-        border-radius: 3px;
-
-        cursor: pointer;
-      }
-
-      #sidebarToggle:hover {
-        color: white;
-        border-color: rgba(255,255,255,0.5);
-      }
-
-      .tree {
-        list-style: none;
-        margin: 0;
-        padding: 6px 0;
-        font-size: 0.85em;
-      }
-
-      .tree li {
-        padding: 3px 12px;
-        cursor: pointer;
-      }
-
-      .tree li:hover {
-        background: rgba(255,255,255,0.05);
-      }
-
-      .file-button,
-      #fileInput,
-      .copyable,
-      #sidebarToggle {
-        pointer-events: auto;
-      }
-
+#viewer canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
     </style>
     </head>
-    <body>
+  <body>
+    <div id="app">
 
-    <!-- TOP BANNER -->
-    <div class="banner">
+      <!-- LEFT SIDEBAR -->
+      <div id="sidebar">
 
-      <div class="metaLeft">
         <div class="fileRow">
           <input type="file" id="fileInput" accept=".osi,.pb" hidden />
-          <label for="fileInput" class="file-button">Load OSI file</label>
-          <span id="fileName">No file selected</span>
+          <label for="fileInput" class="file-button">Load</label>
+          <span id="fileName">No file</span>
         </div>
 
-        <div class="version">
-          <span class="label">OSI file version:</span>
-          <span id="osiVersion"></span>
+        <div class="treeContainer">
+          <ul id="gtTree" class="tree"></ul>
         </div>
+
       </div>
 
-
-      <div class="metaCenterLeft">
-        <div class="odrTitle">Road data</div>
-
-        <div class="metaRow">
-          <span class="label">modelReference:</span>
-          <span id="xodrModelReference" class="copyable"></span>
-        </div>
-
-        <div class="metaRow">
-          <span class="label">mapReference:</span>
-          <span id="mapReference" class="copyable"></span>
-        </div>
-
-        <div class="metaRow">
-          <span class="label">projString:</span>
-          <span id="projString" class="copyable"></span>
-        </div>
-      </div>
-
-
-      <div class="metaRight">
-        <div class="metaRow">
-          <span class="label">Timestamp:</span>
-          <span id="osiTimestamp" class="copyable"></span>
-        </div>
-      </div>
+      <!-- 3D VIEW -->
+      <div id="viewer"></div>
 
     </div>
 
-
-      <!-- 3D scene container -->
-    <div id="viewer"></div>
-
-    <!-- SIDEBAR TOGGLE -->
-    <button id="sidebarToggle" class="sidebarToggleBtn" title="Show Ground Truth">
-      ▶
-    </button>
-
-
-    <!-- SIDEBAR -->
-    <div id="sidebar" class="sidebar collapsed">
-      <div class="sidebarHeader">Ground Truth</div>
-      <ul id="gtTree" class="tree"></ul>
-    </div>
-
-  <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
