@@ -21,6 +21,7 @@ const osiRoot = new THREE.Group();
 let latestGt = null;
 let gtInitialized = false;
 let frameIndex = 0;
+let prevFrameIndex = -1;
 let orbit = null;
 let camera = null;
 let renderer = null;
@@ -205,8 +206,9 @@ function animate() {
             }
             gtInitialized = true;
         } 
-        else {
+        else if (prevFrameIndex != frameIndex) {
             updateFromGroundTruth(latestGt);
+            prevFrameIndex = frameIndex;
         }
     }
 

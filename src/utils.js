@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
-import { buildLazyTree } from "./uiUtils.js";
-import { setCopyable } from "./uiUtils";
+import { buildLazyTree, updateDynamicTree } from "./uiUtils.js";
 import { FOVHelper } from "./fovhelper";
 
 /*const osiVersionEl = document.getElementById('osiVersion');
@@ -27,6 +26,7 @@ export function initFromGroundTruth(gt) {
 }
 
 export function updateFromGroundTruth(gt) {
+    updateDynamicTree(gt);
     // updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
     // updateEnvironment(gt.environmentalConditions);
     gt.movingObject.forEach(obj => {

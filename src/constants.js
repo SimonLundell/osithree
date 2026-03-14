@@ -26,9 +26,11 @@ export const cameraModes = Object.freeze({
 
 export const GT_ORDER = [
     "version",
+    "modelReference",
+    "projString",
+    "mapReference",
     "timestamp",
     "hostVehicleId",
-    "modelReference",
 
     "environmentalConditions",
 
@@ -47,3 +49,7 @@ export const GT_ORDER = [
 
     "occupant"
 ];
+
+export const AUTO_EXPAND = new Set([
+    "timestamp",
+]);

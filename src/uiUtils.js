@@ -1,4 +1,6 @@
-import { GT_ORDER } from "./constants";
+import { GT_ORDER, AUTO_EXPAND } from "./constants";
+
+export const dynamicNodes = new Map();
 
 // Copy-paste text macro
 export function setCopyable(el, value) {
@@ -29,6 +31,32 @@ export function setCopyable(el, value) {
     });
 }
 
+function getValueByPath(obj, path) {
+
+    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+
+    let current = obj;
+
+    for (const part of parts) {
+        if (current == null) return undefined;
+        current = current[part];    
+    }
+
+    return current;
+}
+
+export function updateDynamicTree(gt) {
+
+    for (const [path, el] of dynamicNodes.entries()) {
+        const value = getValueByPath(gt, path);
+        console.log(path, value)
+
+        if (value !== undefined) {
+            el.textContent = value;
+        }
+    }
+}
+
 export function buildLazyTree(tree, gt) {
 
     if (!gt || typeof gt !== "object") return;
@@ -42,8 +70,9 @@ export function buildLazyTree(tree, gt) {
         const value = gt[key];
 
         if (typeof value === "object") {
-            addLazyNode(tree, key, value, new WeakSet());
-        } else {
+            addLazyNode(tree, key, value, new WeakSet(), key);
+        } 
+        else {
             addLeaf(tree, `${key}: ${value}`);
         }
 
@@ -51,13 +80,12 @@ export function buildLazyTree(tree, gt) {
     }
 
     for (const key of Object.keys(gt)) {
-        if (handled.has(key)) continue;
-        if (key.startsWith("$") || key === "constructor") continue;
+        if (handled.has(key) || key.startsWith("$") || key === "constructor") continue;
 
         const value = gt[key];
 
         if (typeof value === "object") {
-            addLazyNode(tree, key, value, new WeakSet());
+            addLazyNode(tree, key, value, new WeakSet(), key);
         } 
         else {
             addLeaf(tree, `${key}: ${value}`);
@@ -65,8 +93,7 @@ export function buildLazyTree(tree, gt) {
     }
 }
 
-function addLazyNode(parent, label, value, visited) {
-
+function addLazyNode(parent, label, value, visited, path = "") {
     const li = document.createElement("li");
     li.classList.add("node");
 
@@ -82,22 +109,26 @@ function addLazyNode(parent, label, value, visited) {
 
     let built = false;
 
+    if (AUTO_EXPAND.has(path)) {
+    buildChildren(children, value, visited, path);
+    built = true;
+    li.classList.add("open");
+    }
+
     title.addEventListener("click", e => {
 
         li.classList.toggle("open");
 
         if (!built) {
-
-            buildChildren(children, value, visited);
+            buildChildren(children, value, visited, path);
             built = true;
-
         }
 
         e.stopPropagation();
     });
 }
 
-function buildChildren(parent, data, visited) {
+function buildChildren(parent, data, visited, path = "") {
 
     if (data === null || data === undefined) {
         addLeaf(parent, String(data));
@@ -117,17 +148,13 @@ function buildChildren(parent, data, visited) {
     if (Array.isArray(data)) {
 
         data.forEach((item, i) => {
-
+            const newPath = `${path}[${i}]`;
             if (typeof item === "object" && item !== null) {
-
-                addLazyNode(parent, `[${i}]`, item, visited);
-
-            } else {
-
-                addLeaf(parent, `[${i}]: ${item}`);
-
+                addLazyNode(parent, `[${i}]`, item, visited, newPath);
             }
-
+            else {
+                addDynamicLeaf(parent, `[${i}]`, newPath, item);
+            }
         });
 
         return;
@@ -135,18 +162,54 @@ function buildChildren(parent, data, visited) {
 
     if (typeof data === "object") {
 
-        buildLazyTree(parent, data, visited);
-        return;
+        const keys = new Set([...Object.keys(data), ...Object.getOwnPropertyNames(Object.getPrototypeOf(data) || {})]);
+        
+        for (const key of keys) {
 
+            if (key.startsWith("$") || key === "constructor") continue;
+
+            const value = data[key];
+            const newPath = path ? `${path}.${key}` : key;
+
+            if (typeof value === "object" && value !== null) {
+                addLazyNode(parent, key, value, visited, newPath);
+            } 
+            else {
+                addDynamicLeaf(parent, key, newPath, value);
+            }
+        }
+
+        return;
     }
 
     addLeaf(parent, String(data));
 }
 
 function addLeaf(parent, label) {
-
     const li = document.createElement("li");
     li.textContent = label;
+
+    parent.appendChild(li);
+}
+
+function addDynamicLeaf(parent, label, keyPath = null, value = null) {
+    const li = document.createElement("li");
+
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = label;
+
+    li.appendChild(labelSpan);
+
+    if (keyPath !== null) {
+
+        const valueSpan = document.createElement("span");
+        valueSpan.textContent = value;
+
+        li.appendChild(document.createTextNode(": "));
+        li.appendChild(valueSpan);
+
+        dynamicNodes.set(keyPath, valueSpan);
+    }
 
     parent.appendChild(li);
 }
