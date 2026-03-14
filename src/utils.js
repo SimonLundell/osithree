@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
-import { buildTree, addNode } from "./uiUtils.js";
+import { buildLazyTree } from "./uiUtils.js";
 import { setCopyable } from "./uiUtils";
 import { FOVHelper } from "./fovhelper";
 
@@ -52,9 +52,7 @@ function initMetaData(gt) {
 
     tree.innerHTML = ""; // clear previous
 
-    const root = addNode(tree, "GroundTruth");
-
-    buildTree(root, gt);
+    buildLazyTree(tree, gt);
     /*
     osiVersionEl.textContent = `${gt.version.versionMajor}.${gt.version.versionMinor}.${gt.version.versionPatch}`;
     updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);

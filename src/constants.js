@@ -23,3 +23,27 @@ export const cameraModes = Object.freeze({
     FOLLOW: 0,
     FREE: 1
 });
+
+export const GT_ORDER = [
+    "version",
+    "timestamp",
+    "hostVehicleId",
+    "modelReference",
+
+    "environmentalConditions",
+
+    "movingObject",
+    "stationaryObject",
+    "trafficLight",
+    "trafficSign",
+
+    "lane",
+    "laneBoundary",
+    "logicalLane",
+    "logicalLaneBoundary",
+    "referenceLine",
+
+    "roadMarking",
+
+    "occupant"
+];
