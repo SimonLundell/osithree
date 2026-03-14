@@ -21,7 +21,7 @@ const osiRoot = new THREE.Group();
 let latestGt = null;
 let gtInitialized = false;
 let frameIndex = 0;
-let prevFrameIndex = -1;
+let currentFrameUpdated = false;
 let orbit = null;
 let camera = null;
 let renderer = null;
@@ -193,23 +193,23 @@ function animate() {
     requestAnimationFrame(animate);
 
     latestGt = gtFrames[frameIndex];
+    if (!latestGt) return;
 
-    if (latestGt) {
-        if (!gtInitialized) {
-            initFromGroundTruth(latestGt);
-            console.log(latestGt);
-            cameraVehicle = movingObjectMap.get(hostVehicleId);
-            if (cameraVehicle) {
-                selectedMesh = cameraVehicle;
-                selectedMesh.material.emissive.set(0x444444);
-                resetFollowCamera();
-            }
-            gtInitialized = true;
-        } 
-        else if (prevFrameIndex != frameIndex) {
-            updateFromGroundTruth(latestGt);
-            prevFrameIndex = frameIndex;
+    if (!gtInitialized) {
+        initFromGroundTruth(latestGt);
+        console.log(latestGt);
+        cameraVehicle = movingObjectMap.get(hostVehicleId);
+        if (cameraVehicle) {
+            selectedMesh = cameraVehicle;
+            selectedMesh.material.emissive.set(0x444444);
+            resetFollowCamera();
         }
+        gtInitialized = true;
+        currentFrameUpdated = true;
+    } 
+
+    if (!currentFrameUpdated) {
+        updateFromGroundTruth(latestGt);
     }
 
     if (cameraMode == cameraModes.FOLLOW) {
@@ -217,7 +217,7 @@ function animate() {
     }
 
     if (gtFrames.length > 0 && options.play) {
-        frameIndex = (frameIndex + 1) % gtFrames.length;
+        stepForward(1);
         stepController.setValue(frameIndex);
         options.play = true;
     }
@@ -270,6 +270,7 @@ function stepForward(steps) {
     frameIndex = (frameIndex + steps) % gtFrames.length;
     stepController.setValue(frameIndex);
     options.play = false;
+    currentFrameUpdated = false;
 }
 
 function stepBackward(steps) {
@@ -277,6 +278,7 @@ function stepBackward(steps) {
     if (frameIndex < 0) frameIndex = gtFrames.length + frameIndex;
     stepController.setValue(frameIndex);
     options.play = false;
+    currentFrameUpdated = false;
 }
 
 stepController.onChange((value) => {

@@ -16,6 +16,8 @@ export const trafficLightMap = new Map();
 export const clickableMeshes = [];
 export let hostVehicleId = null;
 
+const updatedMovingObjects = [];
+
 export function initFromGroundTruth(gt) {
     initMetaData(gt);
     initLanes(gt.lane);
@@ -27,11 +29,21 @@ export function initFromGroundTruth(gt) {
 
 export function updateFromGroundTruth(gt) {
     updateDynamicTree(gt);
-    // updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
-    // updateEnvironment(gt.environmentalConditions);
+    
+    const currentIds = new Set();
+
     gt.movingObject.forEach(obj => {
         updateMovingObj(obj);
+        currentIds.add(obj.id.value);
     });
+
+    // Remove objects no longer present
+    for (const [id, mesh] of movingObjectMap.entries()) {
+        if (!currentIds.has(id)) {
+            removeObj(id, mesh);
+        }
+    }
+
     gt.trafficLight.forEach(tl => {
         updateTrafficLight(tl);
     });
@@ -73,42 +85,46 @@ function setPosAndAngle(mesh, base, offset = 0) {
     mesh.quaternion.copy(yawQuat).multiply(pitchQuat).multiply(rollQuat);
 }
 
-function initMovingObjs(movingObject) {
-    movingObject.forEach(obj => {
-        const width = obj.base.dimension.width;
-        const height = obj.base.dimension.height;
-        const length = obj.base.dimension.length;
-        const boxGeometry = new THREE.BoxGeometry(length, width, height);
-        const boxMaterial = new THREE.MeshStandardMaterial({
-            color: 0x1111AA,
-            wireframe: false,
-            transparent: true,
-            opacity: 0.5
-        });
-        const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
-        addEdges(mesh);
-        const axesHelper = new THREE.AxesHelper();
-        mesh.add(axesHelper);
-        mesh.add(refPoint());
+function initMovingObj(obj) {
+    const width = obj.base.dimension.width;
+    const height = obj.base.dimension.height;
+    const length = obj.base.dimension.length;
+    const boxGeometry = new THREE.BoxGeometry(length, width, height);
+    const boxMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1111AA,
+        wireframe: false,
+        transparent: true,
+        opacity: 0.5
+    });
+    const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    addEdges(mesh);
+    const axesHelper = new THREE.AxesHelper();
+    mesh.add(axesHelper);
+    mesh.add(refPoint());
 
-        /* Maybe fix later
-        const fovHelper = new FOVHelper({
-            fov: 90,
-            range: 15,
-            color: 0xFFFFFF
-        });
-        fovHelper.rotation.x = -Math.PI / 2;
-        fovHelper.rotation.y = Math.PI / 2;
-        box.add(fovHelper);
-        */
+    /* Maybe fix later
+    const fovHelper = new FOVHelper({
+        fov: 90,
+        range: 15,
+        color: 0xFFFFFF
+    });
+    fovHelper.rotation.x = -Math.PI / 2;
+    fovHelper.rotation.y = Math.PI / 2;
+    box.add(fovHelper);
+    */
 
-        osiMovingObjects.add(mesh);
-        
-        setPosAndAngle(mesh, obj.base);
-        mesh.userData.osiObj = obj;
+    osiMovingObjects.add(mesh);
+    
+    setPosAndAngle(mesh, obj.base);
+    mesh.userData.osiObj = obj;
 
-        movingObjectMap.set(obj.id.value, mesh);
-        clickableMeshes.push(mesh);
+    movingObjectMap.set(obj.id.value, mesh);
+    clickableMeshes.push(mesh);
+}
+
+function initMovingObjs(movingObjects) {
+    movingObjects.forEach(obj => {
+        initMovingObj(obj);
     });
 }
 
@@ -324,7 +340,18 @@ function updateTrafficLight(tl) {
    }
 }
 
+function removeObj(id, mesh) {
+    movingObjectMap.delete(id);
+    osiMovingObjects.remove(mesh);
+    const index = clickableMeshes.indexOf(mesh);
+    if (index !== -1) clickableMeshes.splice(index, 1);
+}
+
 function updateMovingObj(obj) {
+    if (!movingObjectMap.has(obj.id.value)) {
+        initMovingObj(obj);
+    }
+
     const mesh = movingObjectMap.get(obj.id.value);
     if (mesh) {
         setPosAndAngle(mesh, mesh.userData.osiObj.base);

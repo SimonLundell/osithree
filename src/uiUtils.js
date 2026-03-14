@@ -1,6 +1,8 @@
 import { GT_ORDER, AUTO_EXPAND } from "./constants";
 
 export const dynamicNodes = new Map();
+const arrayParents = new Map();
+const objectNodes = new Map(); 
 
 // Copy-paste text macro
 export function setCopyable(el, value) {
@@ -47,10 +49,32 @@ function getValueByPath(obj, path) {
 
 export function updateDynamicTree(gt) {
 
+    const parent = arrayParents.get("movingObject");
+    if (!parent || !gt.movingObject) return;
+
+    const activePaths = new Set();
+
+    // --- Add / update nodes ---
+    gt.movingObject.forEach((obj, i) => {
+        const path = `movingObject[${i}]`;
+        activePaths.add(path);
+        if (!objectNodes.has(path)) {
+            const li = addLazyNode(parent, `[${i}]`, obj, new WeakSet(), path);
+            objectNodes.set(path, li);
+        }
+    });
+
+    // --- Remove nodes that disappeared ---
+    for (const [path, li] of objectNodes.entries()) {
+        if (!activePaths.has(path)) {
+            li.remove();
+            objectNodes.delete(path);
+        }
+    }
+
+    // --- Update dynamic leaf values ---
     for (const [path, el] of dynamicNodes.entries()) {
         const value = getValueByPath(gt, path);
-        console.log(path, value)
-
         if (value !== undefined) {
             el.textContent = value;
         }
@@ -107,12 +131,20 @@ function addLazyNode(parent, label, value, visited, path = "") {
 
     parent.appendChild(li);
 
+    if (path === "movingObject") {
+        arrayParents.set("movingObject", children);
+    }
+
+    if (path.startsWith("movingObject[")) {
+        objectNodes.set(path, li);
+    }
+
     let built = false;
 
     if (AUTO_EXPAND.has(path)) {
-    buildChildren(children, value, visited, path);
-    built = true;
-    li.classList.add("open");
+        buildChildren(children, value, visited, path);
+        built = true;
+        li.classList.add("open");
     }
 
     title.addEventListener("click", e => {
@@ -126,6 +158,8 @@ function addLazyNode(parent, label, value, visited, path = "") {
 
         e.stopPropagation();
     });
+
+    return li;
 }
 
 function buildChildren(parent, data, visited, path = "") {
