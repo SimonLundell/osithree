@@ -1,25 +1,17 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
-import { buildLazyTree, updateDynamicTree } from "./uiUtils.js";
+import { initTree, updateTree } from "./uiUtils.js";
 import { FOVHelper } from "./fovhelper";
-
-/*const osiVersionEl = document.getElementById('osiVersion');
-const osiTimestampEl = document.getElementById('osiTimestamp');
-const osiXodrModelReferenceEl = document.getElementById('xodrModelReference');
-const osiMapReferenceEl = document.getElementById('mapReference');
-const osiProjStringEl = document.getElementById('projString');
-*/
 
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
 export const clickableMeshes = [];
 export let hostVehicleId = null;
 
-const updatedMovingObjects = [];
-
 export function initFromGroundTruth(gt) {
-    initMetaData(gt);
+    initMetaData(gt); // Build dynamic html tree
+
     initLanes(gt.lane);
     initLaneBoundaries(gt.laneBoundary);
     initStationaryObjects(gt.stationaryObject);
@@ -28,7 +20,6 @@ export function initFromGroundTruth(gt) {
 }
 
 export function updateFromGroundTruth(gt) {
-    updateDynamicTree(gt);
     
     const currentIds = new Set();
 
@@ -47,32 +38,17 @@ export function updateFromGroundTruth(gt) {
     gt.trafficLight.forEach(tl => {
         updateTrafficLight(tl);
     });
+
+    updateTree(gt);
 }
 
 export function fmt(n, digits = 3) {
     return Number(n).toFixed(digits);
 }
 
-function updateTimestamp(seconds, nanos) {
-    const nanoStr = String(nanos).padStart(9, '0');
-    osiTimestampEl.textContent = `seconds: ${seconds} nanos: ${nanoStr}`
-}
-
 function initMetaData(gt) {
-    hostVehicleId = gt.hostVehicleId.value;
-    const tree = document.getElementById("gtTree");
-
-    tree.innerHTML = ""; // clear previous
-
-    buildLazyTree(tree, gt);
-    /*
-    osiVersionEl.textContent = `${gt.version.versionMajor}.${gt.version.versionMinor}.${gt.version.versionPatch}`;
-    updateTimestamp(gt.timestamp.seconds, gt.timestamp.nanos);
-    setCopyable(osiXodrModelReferenceEl, gt.modelReference?.toString());
-    setCopyable(osiMapReferenceEl, gt.mapReference?.toString());
-    setCopyable(osiProjStringEl, gt.projString?.toString());
-    */
-    // updateEnvironment(gt.environmentalConditions);
+    hostVehicleId = gt.hostVehicleId.value; // TODO: add safeguard if not existing
+    initTree(gt);
 }
 
 function setPosAndAngle(mesh, base, offset = 0) {

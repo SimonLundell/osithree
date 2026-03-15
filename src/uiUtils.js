@@ -1,8 +1,178 @@
-import { GT_ORDER, AUTO_EXPAND } from "./constants";
+import { GT_ORDER, AUTO_EXPAND, dynamicRoots } from "./constants";
 
-export const dynamicNodes = new Map();
-const arrayParents = new Map();
-const objectNodes = new Map(); 
+export function initTree(gt) {
+    const tree = document.getElementById("gtTree");
+    tree.innerHTML = "";
+
+    GT_ORDER.forEach(key => {
+        // FIX #2: Even if it doesn't exist yet, we create a placeholder 
+        // if it's a dynamic root or in our order list.
+        const data = gt[key] !== undefined ? gt[key] : null;
+        const li = createNode(key, data);
+        
+        if (dynamicRoots.includes(key)) li.dataset.dynamic = "true";
+        if (AUTO_EXPAND.has(key)) li.classList.add("open");
+        
+        tree.appendChild(li);
+    });
+}
+
+function createNode(key, data) {
+    const li = document.createElement("li");
+    li.classList.add("node");
+    li.dataset.nodeKey = key;
+
+    const isObject = data !== null && typeof data === "object";
+
+    if (isObject) {
+        const title = document.createElement("span");
+        title.textContent = key;
+        title.classList.add("caret");
+        
+        const childrenUl = document.createElement("ul");
+        li.appendChild(title);
+        li.appendChild(childrenUl);
+
+        // Populate sub-tree
+        const entries = Array.isArray(data) 
+            ? data.map((v, i) => [`[${i}]`, v]) 
+            : Object.entries(data);
+
+        entries.forEach(([k, v]) => {
+            if (k.startsWith("$") || k === "constructor") return;
+            childrenUl.appendChild(createNode(k, v));
+        });
+
+        // The "Brain" of the expansion
+        title.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const parentLi = e.currentTarget.parentElement;
+            parentLi.classList.toggle("open");
+        };
+    } else {
+        const val = (data === null || data === undefined) ? "" : data;
+        li.innerHTML = `${key} <span class="leaf-value">${val}</span>`;
+    }
+    return li;
+}
+
+export function updateTree(gt) {
+    // Look for all roots that are designated as dynamic
+    const roots = document.querySelectorAll("#gtTree > li[data-dynamic='true']");
+    
+    roots.forEach(li => {
+        const key = li.dataset.nodeKey;
+        const newData = gt[key];
+        
+        // Use a "State Switcher" to handle the update
+        syncBranchOrLeaf(li, key, newData);
+    });
+}
+
+function reconcile(ul, data) {
+    if (!ul) return;
+    
+    // Proto3/OSI fix: If data is missing (0/default), we might need to 
+    // force specific fields like 'seconds' or 'nanos' if they are known keys
+    const entries = [];
+    if (data !== null && data !== undefined) {
+        if (Array.isArray(data)) {
+            data.forEach((v, i) => entries.push([`[${i}]`, v]));
+        } else if (typeof data === "object") {
+            // If it's a timestamp object specifically, ensure we show 0s
+            if ('seconds' in data || 'nanos' in data) {
+                entries.push(["seconds", data.seconds || 0]);
+                entries.push(["nanos", data.nanos || 0]);
+            } else {
+                Object.entries(data).forEach(([k, v]) => {
+                    if (!k.startsWith("$") && k !== "constructor") entries.push([k, v]);
+                });
+            }
+        }
+    }
+
+    const existingNodes = new Map();
+    Array.from(ul.children).forEach(child => {
+        existingNodes.set(child.dataset.nodeKey, child);
+    });
+
+    entries.forEach(([key, value]) => {
+        if (existingNodes.has(key)) {
+            updateElement(existingNodes.get(key), value);
+            existingNodes.delete(key);
+        } else {
+            ul.appendChild(createNode(key, value));
+        }
+    });
+
+    existingNodes.forEach(node => ul.removeChild(node));
+}
+
+function updateElement(li, newData) {
+    const valueSpan = li.querySelector(":scope > .leaf-value");
+    const childrenUl = li.querySelector(":scope > ul");
+
+    // Fix #1: Treat 0 as a string "0" instead of falsy
+    const nextVal = (newData === undefined || newData === null) ? "" : String(newData);
+
+    if (valueSpan) {
+        if (valueSpan.textContent !== nextVal) {
+            valueSpan.textContent = nextVal;
+        }
+    } else if (childrenUl) {
+        reconcile(childrenUl, newData);
+    }
+}
+
+function syncBranchOrLeaf(li, key, newData) {
+    const childrenUl = li.querySelector(":scope > ul");
+    const isNewDataValidObject = newData !== null && typeof newData === "object";
+
+    // TRANSFORMATION: From Null/Value to Object/Array
+    if (isNewDataValidObject && !childrenUl) {
+        // 1. Create a fresh branch node
+        const freshNode = createNode(key, newData);
+        
+        // 2. Clear the old leaf (the "key: null" text node)
+        li.innerHTML = "";
+        
+        // 3. Move all elements from freshNode into our existing li
+        // This includes the <span> (with its listener) and the <ul>
+        while (freshNode.firstChild) {
+            li.appendChild(freshNode.firstChild);
+        }
+        
+        li.classList.add("open");
+        // 4. Clean up: Ensure it's ready for interaction
+        return;
+    }
+
+    if (!isNewDataValidObject && childrenUl) {
+        // Remove the 'open' state and the nested UL
+        li.classList.remove("open");
+        const val = (newData === null || newData === undefined) ? "" : newData;
+        
+        // Revert to simple leaf HTML
+        li.innerHTML = `${key} <span class="leaf-value">${val}</span>`;
+        return;
+    }
+
+    // REGULAR UPDATE: It's a branch, keep syncing
+    if (childrenUl && isNewDataValidObject) {
+        reconcile(childrenUl, newData);
+    } 
+    // REGULAR UPDATE: It's a leaf, update the value
+    else {
+        const valSpan = li.querySelector(".leaf-value");
+        if (valSpan) {
+            const val = (newData === null || newData === undefined) ? "" : newData;
+            if (valSpan.textContent !== String(val)) {
+                valSpan.textContent = val;
+            }
+        }
+    }
+}
 
 // Copy-paste text macro
 export function setCopyable(el, value) {
@@ -31,219 +201,4 @@ export function setCopyable(el, value) {
             console.error("Clipboard failed:", err);
         }
     });
-}
-
-function getValueByPath(obj, path) {
-
-    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
-
-    let current = obj;
-
-    for (const part of parts) {
-        if (current == null) return undefined;
-        current = current[part];    
-    }
-
-    return current;
-}
-
-export function updateDynamicTree(gt) {
-
-    const parent = arrayParents.get("movingObject");
-    if (!parent || !gt.movingObject) return;
-
-    const activePaths = new Set();
-
-    // --- Add / update nodes ---
-    gt.movingObject.forEach((obj, i) => {
-        const path = `movingObject[${i}]`;
-        activePaths.add(path);
-        if (!objectNodes.has(path)) {
-            const li = addLazyNode(parent, `[${i}]`, obj, new WeakSet(), path);
-            objectNodes.set(path, li);
-        }
-    });
-
-    // --- Remove nodes that disappeared ---
-    for (const [path, li] of objectNodes.entries()) {
-        if (!activePaths.has(path)) {
-            li.remove();
-            objectNodes.delete(path);
-        }
-    }
-
-    // --- Update dynamic leaf values ---
-    for (const [path, el] of dynamicNodes.entries()) {
-        const value = getValueByPath(gt, path);
-        if (value !== undefined) {
-            el.textContent = value;
-        }
-    }
-}
-
-export function buildLazyTree(tree, gt) {
-
-    if (!gt || typeof gt !== "object") return;
-    
-    const handled = new Set();
-    
-    // First render preferred order
-    for (const key of GT_ORDER) {
-        if (!(key in gt)) continue;
-
-        const value = gt[key];
-
-        if (typeof value === "object") {
-            addLazyNode(tree, key, value, new WeakSet(), key);
-        } 
-        else {
-            addLeaf(tree, `${key}: ${value}`);
-        }
-
-        handled.add(key);
-    }
-
-    for (const key of Object.keys(gt)) {
-        if (handled.has(key) || key.startsWith("$") || key === "constructor") continue;
-
-        const value = gt[key];
-
-        if (typeof value === "object") {
-            addLazyNode(tree, key, value, new WeakSet(), key);
-        } 
-        else {
-            addLeaf(tree, `${key}: ${value}`);
-        }
-    }
-}
-
-function addLazyNode(parent, label, value, visited, path = "") {
-    const li = document.createElement("li");
-    li.classList.add("node");
-
-    const title = document.createElement("span");
-    title.textContent = label;
-
-    const children = document.createElement("ul");
-
-    li.appendChild(title);
-    li.appendChild(children);
-
-    parent.appendChild(li);
-
-    if (path === "movingObject") {
-        arrayParents.set("movingObject", children);
-    }
-
-    if (path.startsWith("movingObject[")) {
-        objectNodes.set(path, li);
-    }
-
-    let built = false;
-
-    if (AUTO_EXPAND.has(path)) {
-        buildChildren(children, value, visited, path);
-        built = true;
-        li.classList.add("open");
-    }
-
-    title.addEventListener("click", e => {
-
-        li.classList.toggle("open");
-
-        if (!built) {
-            buildChildren(children, value, visited, path);
-            built = true;
-        }
-
-        e.stopPropagation();
-    });
-
-    return li;
-}
-
-function buildChildren(parent, data, visited, path = "") {
-
-    if (data === null || data === undefined) {
-        addLeaf(parent, String(data));
-        return;
-    }
-
-    if (typeof data === "object") {
-
-        if (visited.has(data)) {
-            addLeaf(parent, "[circular]");
-            return;
-        }
-
-        visited.add(data);
-    }
-
-    if (Array.isArray(data)) {
-
-        data.forEach((item, i) => {
-            const newPath = `${path}[${i}]`;
-            if (typeof item === "object" && item !== null) {
-                addLazyNode(parent, `[${i}]`, item, visited, newPath);
-            }
-            else {
-                addDynamicLeaf(parent, `[${i}]`, newPath, item);
-            }
-        });
-
-        return;
-    }
-
-    if (typeof data === "object") {
-
-        const keys = new Set([...Object.keys(data), ...Object.getOwnPropertyNames(Object.getPrototypeOf(data) || {})]);
-        
-        for (const key of keys) {
-
-            if (key.startsWith("$") || key === "constructor") continue;
-
-            const value = data[key];
-            const newPath = path ? `${path}.${key}` : key;
-
-            if (typeof value === "object" && value !== null) {
-                addLazyNode(parent, key, value, visited, newPath);
-            } 
-            else {
-                addDynamicLeaf(parent, key, newPath, value);
-            }
-        }
-
-        return;
-    }
-
-    addLeaf(parent, String(data));
-}
-
-function addLeaf(parent, label) {
-    const li = document.createElement("li");
-    li.textContent = label;
-
-    parent.appendChild(li);
-}
-
-function addDynamicLeaf(parent, label, keyPath = null, value = null) {
-    const li = document.createElement("li");
-
-    const labelSpan = document.createElement("span");
-    labelSpan.textContent = label;
-
-    li.appendChild(labelSpan);
-
-    if (keyPath !== null) {
-
-        const valueSpan = document.createElement("span");
-        valueSpan.textContent = value;
-
-        li.appendChild(document.createTextNode(": "));
-        li.appendChild(valueSpan);
-
-        dynamicNodes.set(keyPath, valueSpan);
-    }
-
-    parent.appendChild(li);
 }

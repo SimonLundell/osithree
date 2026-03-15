@@ -53,3 +53,11 @@ export const GT_ORDER = [
 export const AUTO_EXPAND = new Set([
     "timestamp",
 ]);
+
+export const dynamicRoots = [
+    "timestamp",
+    "environmentalConditions",
+    "movingObject",
+    "trafficLight",
+    "trafficSign"
+];

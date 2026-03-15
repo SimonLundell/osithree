@@ -13,10 +13,6 @@ const standardFollowOffset = new THREE.Vector3(-15, 0, 10);
 const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
-// const osiSelectedObjId = document.getElementById('ObjectId');
-// const osiSelectedObjPos = document.getElementById('ObjectPos');
-// const osiSelectedObjSpeed = document.getElementById('ObjectSpeed');
-// const osiSelectedObjAngle = document.getElementById('ObjectOrientation');
 
 let latestGt = null;
 let gtInitialized = false;
@@ -284,6 +280,7 @@ function stepBackward(steps) {
 stepController.onChange((value) => {
     frameIndex = Math.floor(value);
     options.play = false;
+    currentFrameUpdated = false;
 });
 
 window.addEventListener('resize', () => {
