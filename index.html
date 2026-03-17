@@ -124,6 +124,22 @@ html, body {
   height: 100%;
   display: block;
 }
+
+@keyframes flash-green {
+    0% { background-color: rgba(46, 204, 113, 0.4); }
+    100% { background-color: transparent; }
+}
+
+.updated-flash > span.caret, 
+.updated-flash > .leaf-value {
+    animation: flash-green 1.0s ease-out;
+}
+
+/* Optional: Ensure the flash doesn't bleed into nested open children */
+.node {
+    transition: background-color 0.2s;
+}
+
     </style>
     </head>
   <body>

@@ -71,7 +71,8 @@ export function updateTree(gt) {
 }
 
 function reconcile(ul, data) {
-    if (!ul) return;
+    if (!ul) return false;
+    let anyChildChanged = false;
     
     // Proto3/OSI fix: If data is missing (0/default), we might need to 
     // force specific fields like 'seconds' or 'nanos' if they are known keys
@@ -99,14 +100,19 @@ function reconcile(ul, data) {
 
     entries.forEach(([key, value]) => {
         if (existingNodes.has(key)) {
-            updateElement(existingNodes.get(key), value);
+            // updateElement(existingNodes.get(key), value);
+            const changed = syncBranchOrLeaf(existingNodes.get(key), key, value);
+            if (changed) anyChildChanged = true;
             existingNodes.delete(key);
         } else {
             ul.appendChild(createNode(key, value));
+            anyChildChanged = true;
         }
     });
 
     existingNodes.forEach(node => ul.removeChild(node));
+
+    return anyChildChanged;
 }
 
 function updateElement(li, newData) {
@@ -129,52 +135,55 @@ function syncBranchOrLeaf(li, key, newData) {
     const childrenUl = li.querySelector(":scope > ul");
     const isNewDataValidObject = newData !== null && typeof newData === "object";
 
-    // TRANSFORMATION: From Null/Value to Object/Array
+    // 1. TRANSFORMATION: Null -> Object
     if (isNewDataValidObject && !childrenUl) {
-        // 1. Create a fresh branch node
         const freshNode = createNode(key, newData);
-        
-        // 2. Clear the old leaf (the "key: null" text node)
         li.innerHTML = "";
-        
-        // 3. Move all elements from freshNode into our existing li
-        // This includes the <span> (with its listener) and the <ul>
-        while (freshNode.firstChild) {
-            li.appendChild(freshNode.firstChild);
-        }
-        
-        li.classList.add("open");
-        // 4. Clean up: Ensure it's ready for interaction
+        while (freshNode.firstChild) li.appendChild(freshNode.firstChild);
+        triggerFlash(li); // Flash because the structure is new
         return;
     }
 
+    // 2. REVERSE: Object -> Null
     if (!isNewDataValidObject && childrenUl) {
-        // Remove the 'open' state and the nested UL
         li.classList.remove("open");
-        const val = (newData === null || newData === undefined) ? "" : newData;
-        
-        // Revert to simple leaf HTML
-        li.innerHTML = `${key} <span class="leaf-value">${val}</span>`;
+        li.innerHTML = `${key} <span class="leaf-value">${newData ?? ""}</span>`;
+        triggerFlash(li); // Flash because the data vanished
         return;
     }
 
-    // REGULAR UPDATE: It's a branch, keep syncing
+    // 3. REGULAR UPDATE: Branch
     if (childrenUl && isNewDataValidObject) {
-        // ONLY this line is added to protect the toggle state
+        // If open, we go deeper. 
+        // We do NOT flash this branch here; the children will flash themselves.
         if (li.classList.contains("open")) {
             reconcile(childrenUl, newData);
+        } else {
+            // OPTIONAL: If you want a closed folder to flash when internal data changes,
+            // you'd need the "Shadow Cache" we discussed. 
+            // Otherwise, a closed folder stays quiet.
         }
-    }
-    // REGULAR UPDATE: It's a leaf, update the value
+    } 
+    
+    // 4. REGULAR UPDATE: Leaf
     else {
-        const valSpan = li.querySelector(".leaf-value");
+        const valSpan = li.querySelector(":scope > .leaf-value");
         if (valSpan) {
-            const val = (newData === null || newData === undefined) ? "" : newData;
-            if (valSpan.textContent !== String(val)) {
-                valSpan.textContent = val;
+            const nextVal = (newData === undefined || newData === null) ? "" : String(newData);
+            if (valSpan.textContent !== nextVal) {
+                valSpan.textContent = nextVal;
+                triggerFlash(li); // Flash ONLY the leaf that actually changed
             }
         }
     }
+}
+
+function triggerFlash(el) {
+    // Remove class to restart animation if it's already running
+    el.classList.remove("updated-flash");
+    // Trigger a reflow to allow the browser to see the class removal
+    void el.offsetWidth; 
+    el.classList.add("updated-flash");
 }
 
 // Copy-paste text macro
