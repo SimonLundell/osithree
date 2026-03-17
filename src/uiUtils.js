@@ -160,8 +160,11 @@ function syncBranchOrLeaf(li, key, newData) {
 
     // REGULAR UPDATE: It's a branch, keep syncing
     if (childrenUl && isNewDataValidObject) {
-        reconcile(childrenUl, newData);
-    } 
+        // ONLY this line is added to protect the toggle state
+        if (li.classList.contains("open")) {
+            reconcile(childrenUl, newData);
+        }
+    }
     // REGULAR UPDATE: It's a leaf, update the value
     else {
         const valSpan = li.querySelector(".leaf-value");
