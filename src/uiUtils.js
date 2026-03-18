@@ -48,7 +48,21 @@ function createNode(key, data) {
             e.preventDefault();
             e.stopPropagation();
             const parentLi = e.currentTarget.parentElement;
+            const isOpening = !parentLi.classList.contains("open");
+
             parentLi.classList.toggle("open");
+
+            if (e.shiftKey) {
+                const childNodes = parentLi.querySelectorAll("li.node");
+                childNodes.forEach(child => {
+                    if (isOpening) {
+                        child.classList.add("open");
+                    }
+                    else {
+                        child.classList.remove("open");
+                    }
+                });
+            }
         };
     } else {
         const val = (data === null || data === undefined) ? "" : data;
@@ -158,10 +172,6 @@ function syncBranchOrLeaf(li, key, newData) {
         // We do NOT flash this branch here; the children will flash themselves.
         if (li.classList.contains("open")) {
             reconcile(childrenUl, newData);
-        } else {
-            // OPTIONAL: If you want a closed folder to flash when internal data changes,
-            // you'd need the "Shadow Cache" we discussed. 
-            // Otherwise, a closed folder stays quiet.
         }
     } 
     
