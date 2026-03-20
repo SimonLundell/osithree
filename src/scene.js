@@ -3,6 +3,7 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes } from "./utils";
+import { focusAndExpandObject } from "./uiUtils.js";
 import { cameraModes } from "./constants.js";
 
 const gtFrames = [];
@@ -196,8 +197,6 @@ function animate() {
         console.log(latestGt);
         cameraVehicle = movingObjectMap.get(hostVehicleId);
         if (cameraVehicle) {
-            selectedMesh = cameraVehicle;
-            selectedMesh.material.emissive.set(0x444444);
             resetFollowCamera();
         }
         gtInitialized = true;
@@ -358,23 +357,10 @@ window.addEventListener("mousedown", (e) => {
         selectedMesh = mesh;
         selectedMesh.material.emissive.set(0x444444);
 
-        const osiObj = mesh.userData.osiObj;
-        console.log("Clicked:", osiObj);
-    }
-
-    // RIGHT CLICK → deselect if clicking empty space
-    /*
-    if (e.button === 2) {
-
-        if (intersections.length === 0 && selectedMesh) {
-
-            selectedMesh.material.emissive.set(0x000000);
-            selectedMesh = null;
-
-            console.log("Selection cleared");
+        if (mesh.userData.osiId) {
+            focusAndExpandObject("movingObject", mesh.userData.osiId);
         }
     }
-    */
 });
 
 window.addEventListener('keydown', onKeyDown);

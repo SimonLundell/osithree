@@ -1,5 +1,54 @@
 import { GT_ORDER, AUTO_EXPAND, dynamicRoots } from "./constants";
 
+export function focusAndExpandObject(topic, osiId) {
+    const topicLi = document.querySelector(`#gtTree > li[data-node-key='${topic}']`);
+    if (!topicLi) return;
+
+    const indexNodes = topicLi.querySelectorAll(":scope > ul > li");
+    let targetIndexLi = null;
+
+    for (const li of indexNodes) {
+        const allSpans = li.querySelectorAll(".leaf-value");
+        
+        for (const span of allSpans) {
+            if (span.textContent.trim() === String(osiId)) {
+                // Get the 'li' containing the value 14
+                const valueLi = span.closest('li'); 
+                // Get the 'li' above it (should be 'id')
+                const idLi = valueLi.parentElement.closest('li'); 
+
+                // Check if we are inside an "id" structure
+                if (idLi && idLi.dataset.nodeKey === "id") {
+                    targetIndexLi = li; // This is the [0], [1] index node
+                    break;
+                }
+            }
+        }
+        if (targetIndexLi) break;
+    }
+
+    if (targetIndexLi) {
+        // 1. Open the Topic (e.g. movingObjects)
+        topicLi.classList.add("open");
+
+        // 2. Open the Index ([0], [1], etc)
+        targetIndexLi.classList.add("open");
+
+        // 3. Open ALL nested properties (id, base, position, etc)
+        const nestedNodes = targetIndexLi.querySelectorAll("li.node");
+        nestedNodes.forEach(n => n.classList.add("open"));
+
+        // 4. Scroll and Flash
+        targetIndexLi.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        const caret = targetIndexLi.querySelector(":scope > .caret");
+        if (caret) {
+            caret.classList.add("updated-flash");
+            setTimeout(() => caret.classList.remove("updated-flash"), 1000);
+        }
+    }
+}
+
 export function initTree(gt) {
     const tree = document.getElementById("gtTree");
     tree.innerHTML = "";

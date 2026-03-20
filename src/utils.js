@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { laneBoundaryColor, trafficLightColor, basicBlack } from "./constants";
+import { laneBoundaryColor, trafficLightColor, basicBlack, fullBlack } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
 import { initTree, updateTree } from "./uiUtils.js";
 import { FOVHelper } from "./fovhelper";
@@ -66,6 +66,7 @@ function initMovingObj(obj) {
     const height = obj.base.dimension.height;
     const length = obj.base.dimension.length;
     const boxGeometry = new THREE.BoxGeometry(length, width, height);
+    // const color = obj.base.colorDescription.rgb
     const boxMaterial = new THREE.MeshStandardMaterial({
         color: 0x1111AA,
         wireframe: false,
@@ -93,6 +94,7 @@ function initMovingObj(obj) {
     
     setPosAndAngle(mesh, obj.base);
     mesh.userData.osiObj = obj;
+    mesh.userData.osiId = obj.id.value;
 
     movingObjectMap.set(obj.id.value, mesh);
     clickableMeshes.push(mesh);
@@ -160,10 +162,6 @@ function initLaneBoundaries(laneBoundaries) {
             osiBoundaries.add(strip);
         }
     });
-}
-
-function updateEnvironment(env) {
-    envJson.textContent = JSON.stringify(env, null, 2);
 }
 
 function initLanes(lanes) {
@@ -286,8 +284,8 @@ function initTrafficLights(trafficLights) {
 
         const materials = [
             new THREE.MeshStandardMaterial({color: color}),
-            new THREE.MeshStandardMaterial({color: 0x000000}),
-            new THREE.MeshStandardMaterial({color: 0x000000}),
+            new THREE.MeshStandardMaterial({color: fullBlack}),
+            new THREE.MeshStandardMaterial({color: fullBlack}),
         ];
 
         const mesh = new THREE.Mesh(geometry, materials);

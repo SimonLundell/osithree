@@ -18,6 +18,7 @@ export const trafficLightColor = new Map([
 ]);
 
 export const basicBlack = 0x111111; 
+export const fullBlack = 0x000000;
 
 export const cameraModes = Object.freeze({
     FOLLOW: 0,
