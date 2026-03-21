@@ -61,6 +61,15 @@ function setPosAndAngle(mesh, base, offset = 0) {
     mesh.quaternion.copy(yawQuat).multiply(pitchQuat).multiply(rollQuat);
 }
 
+function setClickable(topic, obj, mesh) {
+    mesh.userData.osiObj = obj;
+    mesh.userData.osiId = obj.id.value;
+    mesh.userData.topic = topic;
+
+    clickableMeshes.push(mesh);
+    console.log(clickableMeshes);
+}
+
 function initMovingObj(obj) {
     const width = obj.base.dimension.width;
     const height = obj.base.dimension.height;
@@ -93,11 +102,8 @@ function initMovingObj(obj) {
     osiMovingObjects.add(mesh);
     
     setPosAndAngle(mesh, obj.base);
-    mesh.userData.osiObj = obj;
-    mesh.userData.osiId = obj.id.value;
-
+    setClickable("movingObject", obj, mesh);
     movingObjectMap.set(obj.id.value, mesh);
-    clickableMeshes.push(mesh);
 }
 
 function initMovingObjs(movingObjects) {
@@ -289,8 +295,10 @@ function initTrafficLights(trafficLights) {
         ];
 
         const mesh = new THREE.Mesh(geometry, materials);
+        mesh.geometry.computeBoundingSphere();
 
         setPosAndAngle(mesh, trafficLight.base);
+        setClickable("trafficLight", trafficLight, mesh);
 
         osiTrafficLights.add(mesh);
 

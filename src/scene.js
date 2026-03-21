@@ -299,6 +299,18 @@ function updateMouse(e) {
     mousePosition.y = (-(e.clientY - rect.top) / rect.height) * 2 + 1;
 };
 
+function setEmissive(mesh, colorHex) {
+    if (!mesh) return;
+    
+    if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(mat => {
+            if (mat.emissive) mat.emissive.set(colorHex);
+        });
+    } else {
+        if (mesh.material.emissive) mesh.material.emissive.set(colorHex);
+    }
+}
+
 window.addEventListener("mousemove", (e) => {
 
     if (!rayCaster) return;
@@ -323,14 +335,14 @@ window.addEventListener("mousemove", (e) => {
 
         // Remove hover glow from previous hovered
         if (hoveredMesh && hoveredMesh !== selectedMesh) {
-            hoveredMesh.material.emissive.set(0x000000);
+            setEmissive(hoveredMesh, 0x000000);
         }
 
         hoveredMesh = newHovered;
 
         // Add glow to new hovered
         if (hoveredMesh) {
-            hoveredMesh.material.emissive.set(0x111111);
+            setEmissive(hoveredMesh, 0x444444);
         }
     }
 
@@ -351,14 +363,14 @@ window.addEventListener("mousedown", (e) => {
         const mesh = intersections[0].object;
 
         if (selectedMesh && selectedMesh !== mesh) {
-            selectedMesh.material.emissive.set(0x000000);
+            setEmissive(selectedMesh, 0x000000);
         }
 
         selectedMesh = mesh;
-        selectedMesh.material.emissive.set(0x444444);
+        setEmissive(selectedMesh, 0x888888);
 
         if (mesh.userData.osiId) {
-            focusAndExpandObject("movingObject", mesh.userData.osiId);
+            focusAndExpandObject(mesh.userData.topic, mesh.userData.osiId);
         }
     }
 });
