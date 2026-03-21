@@ -46,6 +46,13 @@ export function fmt(n, digits = 3) {
     return Number(n).toFixed(digits);
 }
 
+export function clearUtils() {
+    movingObjectMap.clear();
+    trafficLightMap.clear();
+    clickableMeshes.length = 0;
+    hostVehicleId = null;
+}
+
 function initMetaData(gt) {
     hostVehicleId = gt.hostVehicleId.value; // TODO: add safeguard if not existing
     initTree(gt);
@@ -67,7 +74,6 @@ function setClickable(topic, obj, mesh) {
     mesh.userData.topic = topic;
 
     clickableMeshes.push(mesh);
-    console.log(clickableMeshes);
 }
 
 function initMovingObj(obj) {
@@ -167,6 +173,8 @@ function initLaneBoundaries(laneBoundaries) {
         else {
             osiBoundaries.add(strip);
         }
+
+        setClickable("laneBoundary", boundary, strip);
     });
 }
 
@@ -184,6 +192,7 @@ function initLanes(lanes) {
         });
 
         const strip = new THREE.Mesh(geometry, material);
+        setClickable("lane", lane, strip);
         // We want to be able to toggle any boundary that isn't solid or dashed line
         osiBoundaries.add(strip);
     })
@@ -219,6 +228,7 @@ function initStationaryObjects(stationaryObjects) {
             osiStationaryObjects.userData.meshes.push(mesh);
 
             setPosAndAngle(mesh, sObj.base, -height / 2);
+            setClickable("stationaryObject", sObj, mesh)
         } 
         else { // Its just a box with a position and rotation?
             const width = sObj.base.dimension.width;
@@ -240,7 +250,9 @@ function initStationaryObjects(stationaryObjects) {
             osiStationaryObjects.userData.meshes.push(box);
             
             setPosAndAngle(box, sObj.base);
+            setClickable("stationaryObject", sObj, box)
         }
+
     });
 }
 

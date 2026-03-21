@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes } from "./utils";
+import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils } from "./utils";
 import { focusAndExpandObject } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
@@ -184,6 +184,8 @@ export function resetScene() {
     osiTrafficLights.clear();
     movingObjectMap.clear();
     osiMovingObjects.clear();
+
+    clearUtils();
 }
 
 function animate() {
