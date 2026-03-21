@@ -17,8 +17,12 @@ export const trafficLightColor = new Map([
     [6, 0xFFFFFF], // WHITE
 ]);
 
-export const basicBlack = 0x111111; 
-export const fullBlack = 0x000000;
+export const stylingColors = {
+    pitchBlack: 0x000000,
+    basicBlack: 0x111111,
+    hoveredMesh: 0x444444,
+    selectedMesh: 0x888888
+}
 
 export const cameraModes = Object.freeze({
     FOLLOW: 0,

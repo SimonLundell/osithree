@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { laneBoundaryColor, trafficLightColor, basicBlack, fullBlack } from "./constants";
+import { laneBoundaryColor, trafficLightColor, stylingColors } from "./constants";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
 import { initTree, updateTree } from "./uiUtils.js";
 import { FOVHelper } from "./fovhelper";
@@ -283,15 +283,15 @@ function initTrafficLights(trafficLights) {
             2
         );
 
-        let color = basicBlack;
+        let color = stylingColors.basicBlack;
         if (trafficLight.classification.mode > 2) {
             color = trafficLightColor.get(trafficLight.classification.color);
         }
 
         const materials = [
             new THREE.MeshStandardMaterial({color: color}),
-            new THREE.MeshStandardMaterial({color: fullBlack}),
-            new THREE.MeshStandardMaterial({color: fullBlack}),
+            new THREE.MeshStandardMaterial({color: stylingColors.pitchBlack}),
+            new THREE.MeshStandardMaterial({color: stylingColors.pitchBlack}),
         ];
 
         const mesh = new THREE.Mesh(geometry, materials);
@@ -309,7 +309,7 @@ function initTrafficLights(trafficLights) {
 function updateTrafficLight(tl) {
    const mesh = trafficLightMap.get(tl.id.value);
    if (mesh) {
-    let color = basicBlack;
+    let color = stylingColors.basicBlack;
     if (tl.classification.mode > 2) {
         color = trafficLightColor.get(tl.classification.color);
     }

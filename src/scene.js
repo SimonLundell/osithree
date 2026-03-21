@@ -4,7 +4,7 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes } from "./utils";
 import { focusAndExpandObject } from "./uiUtils.js";
-import { cameraModes } from "./constants.js";
+import { cameraModes, stylingColors } from "./constants.js";
 
 const gtFrames = [];
 const gui = new GUI();
@@ -335,14 +335,14 @@ window.addEventListener("mousemove", (e) => {
 
         // Remove hover glow from previous hovered
         if (hoveredMesh && hoveredMesh !== selectedMesh) {
-            setEmissive(hoveredMesh, 0x000000);
+            setEmissive(hoveredMesh, stylingColors.pitchBlack);
         }
 
         hoveredMesh = newHovered;
 
         // Add glow to new hovered
         if (hoveredMesh) {
-            setEmissive(hoveredMesh, 0x444444);
+            setEmissive(hoveredMesh, stylingColors.hoveredMesh);
         }
     }
 
@@ -363,11 +363,11 @@ window.addEventListener("mousedown", (e) => {
         const mesh = intersections[0].object;
 
         if (selectedMesh && selectedMesh !== mesh) {
-            setEmissive(selectedMesh, 0x000000);
+            setEmissive(selectedMesh, stylingColors.pitchBlack);
         }
 
         selectedMesh = mesh;
-        setEmissive(selectedMesh, 0x888888);
+        setEmissive(selectedMesh, stylingColors.selectedMesh);
 
         if (mesh.userData.osiId) {
             focusAndExpandObject(mesh.userData.topic, mesh.userData.osiId);
@@ -427,7 +427,7 @@ function onKeyDown(event) {
             break;
         case 'Escape':
             if (selectedMesh) {
-                selectedMesh.material.emissive.set(0x000000);
+                setEmissive(selectedMesh, stylingColors.pitchBlack);
                 selectedMesh = null;
             }
     }
