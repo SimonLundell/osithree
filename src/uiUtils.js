@@ -120,6 +120,22 @@ function createNode(key, data) {
     return li;
 }
 
+export function collapseTree() {
+    const treeRoot = document.getElementById("gtTree");
+    if (!treeRoot) return;
+
+    // Find all list items that are currently open
+    const openNodes = treeRoot.querySelectorAll("li.open");
+
+    openNodes.forEach(node => {
+        node.classList.remove("open");
+    });
+
+    // Optional: Scroll back to the top of the sidebar 
+    // so the user starts from a clean slate
+    treeRoot.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 export function updateTree(gt) {
     // Look for all roots that are designated as dynamic
     const roots = document.querySelectorAll("#gtTree > li[data-dynamic='true']");
@@ -176,22 +192,6 @@ function reconcile(ul, data) {
     existingNodes.forEach(node => ul.removeChild(node));
 
     return anyChildChanged;
-}
-
-function updateElement(li, newData) {
-    const valueSpan = li.querySelector(":scope > .leaf-value");
-    const childrenUl = li.querySelector(":scope > ul");
-
-    // Fix #1: Treat 0 as a string "0" instead of falsy
-    const nextVal = (newData === undefined || newData === null) ? "" : String(newData);
-
-    if (valueSpan) {
-        if (valueSpan.textContent !== nextVal) {
-            valueSpan.textContent = nextVal;
-        }
-    } else if (childrenUl) {
-        reconcile(childrenUl, newData);
-    }
 }
 
 function syncBranchOrLeaf(li, key, newData) {

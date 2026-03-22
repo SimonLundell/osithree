@@ -3,7 +3,7 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils } from "./utils";
-import { focusAndExpandObject } from "./uiUtils.js";
+import { focusAndExpandObject, collapseTree } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
 const gtFrames = [];
@@ -76,6 +76,18 @@ export const options = {
         this.boundaries = !this.boundaries;
         osiBoundaries.visible = this.boundaries;
     },
+
+    removeSelection() {
+        if (selectedMesh) {
+            setEmissive(selectedMesh, stylingColors.pitchBlack);
+            selectedMesh = null;
+        }
+    },
+
+    collapseAndDeselect() {
+        this.removeSelection();
+        collapseTree();
+    }
 }
 
 let stepController = gui.add(options, 'step', 0, 1).step(1);
@@ -85,6 +97,8 @@ gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
 gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
 gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
 gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
+gui.add(options, 'collapseAndDeselect').name("Collapse tree and remove selection (esc)");
+gui.add(options, 'removeSelection').name("Remove current selection (q)");
 
 export function addGroundTruth(gt) {
     gtFrames.push(gt);
@@ -427,13 +441,13 @@ function onKeyDown(event) {
         case 'p':
             options.toggleOsiPoints();
             break;
+        case 'q':
+            options.removeSelection();
+            break;
         case 'w':
             options.toggleWireframe();
             break;
         case 'Escape':
-            if (selectedMesh) {
-                setEmissive(selectedMesh, stylingColors.pitchBlack);
-                selectedMesh = null;
-            }
+            options.collapseAndDeselect();
     }
 }
