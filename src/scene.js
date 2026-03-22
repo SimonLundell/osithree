@@ -309,7 +309,10 @@ function setEmissive(mesh, colorHex) {
             if (mat.emissive) mat.emissive.set(colorHex);
         });
     } else {
-        if (mesh.material.emissive) mesh.material.emissive.set(colorHex);
+        if (mesh.material.emissive) {
+            mesh.material.emissiveIntensity = 0.8;
+            mesh.material.emissive.set(colorHex);
+        }
     }
 }
 

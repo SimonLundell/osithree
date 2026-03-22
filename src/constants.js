@@ -20,8 +20,8 @@ export const trafficLightColor = new Map([
 export const stylingColors = {
     pitchBlack: 0x000000,
     basicBlack: 0x111111,
-    hoveredMesh: 0x444444,
-    selectedMesh: 0x888888
+    hoveredMesh: 0x777777,
+    selectedMesh: 0xAAAAAA
 }
 
 export const cameraModes = Object.freeze({
