@@ -3,7 +3,7 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils } from "./utils";
-import { focusAndExpandObject, collapseTree } from "./uiUtils.js";
+import { focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
 const gtFrames = [];
@@ -120,7 +120,9 @@ export function setupScene() {
     viewer.appendChild(renderer.domElement);
     
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0x222222)
+    renderer.setClearColor(0x222222);
+
+    initResizableSidebar(camera, renderer);
     
     orbit = new OrbitControls(camera, renderer.domElement);
     orbit.target.set(0, 0, 0);

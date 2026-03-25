@@ -273,3 +273,53 @@ export function setCopyable(el, value) {
         }
     });
 }
+
+export function initResizableSidebar(camera, renderer) {
+    const sidebar = document.getElementById('sidebar');
+    const resizer = document.getElementById('resizer');
+    const viewer = document.getElementById('viewer');
+    
+    let isResizing = false;
+
+    // 1. Mouse Down - Start resizing
+    resizer.addEventListener('mousedown', () => {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        // Prevent text selection while dragging
+        document.body.style.userSelect = 'none'; 
+    });
+
+    // 2. Mouse Move - Calculate and Apply Width
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+
+        // The mouse X position determines the new sidebar width
+        let newWidth = e.clientX;
+
+        // Apply constraints (match these to your CSS min/max)
+        if (newWidth < 200) newWidth = 200;
+        if (newWidth > 800) newWidth = 800;
+
+        sidebar.style.width = `${newWidth}px`;
+
+        // 3. Update Three.js to prevent stretching
+        // Use viewer.clientWidth/Height because the viewer div 
+        // automatically resizes thanks to flex: 1
+        const width = viewer.clientWidth;
+        const height = viewer.clientHeight;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        
+        renderer.setSize(width, height);
+    });
+
+    // 4. Mouse Up - Stop resizing
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        }
+    });
+}

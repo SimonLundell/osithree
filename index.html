@@ -16,20 +16,49 @@ html, body {
 
 /* Main layout */
 #app {
-  display: flex;
   height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+#container {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
 /* LEFT SIDEBAR */
 
 #sidebar {
-  width: 300px;
+  width: 400px; /* Starting width (slightly wider as requested) */
+  min-width: 200px;
+  max-width: 800px;
   background: #1e1e1e;
   border-right: 1px solid rgba(255,255,255,0.08);
-
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Prevents tree from pushing sidebar width */
 }
+
+#resizer {
+  width: 4px;
+  cursor: col-resize;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+#resizer:hover {
+  background: rgba(74, 158, 255, 0.5); /* Blue highlight on hover */
+}
+
+.treeContainer {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+
 
 /* File loader row */
 
@@ -117,11 +146,13 @@ html, body {
 #viewer {
   flex: 1;
   position: relative;
+  background: #000;
+  min-width: 0; /* Important for flex child shrinking */
 }
 
 #viewer canvas {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
   display: block;
 }
 
@@ -144,25 +175,25 @@ html, body {
     </head>
   <body>
     <div id="app">
-
       <!-- LEFT SIDEBAR -->
-      <div id="sidebar">
+      <div id="container">
+        <div id="sidebar">
 
-        <div class="fileRow">
-          <input type="file" id="fileInput" accept=".osi,.pb" hidden />
-          <label for="fileInput" class="file-button">Load</label>
-          <span id="fileName">No file</span>
+          <div class="fileRow">
+            <input type="file" id="fileInput" accept=".osi,.pb" hidden />
+            <label for="fileInput" class="file-button">Load</label>
+            <span id="fileName">No file</span>
+          </div>
+
+          <div class="treeContainer">
+            <ul id="gtTree" class="tree"></ul>
+          </div>
+
         </div>
-
-        <div class="treeContainer">
-          <ul id="gtTree" class="tree"></ul>
-        </div>
-
+        <div id="resizer"></div>
+        <!-- 3D VIEW -->
+        <div id="viewer"></div>
       </div>
-
-      <!-- 3D VIEW -->
-      <div id="viewer"></div>
-
     </div>
 
     <script type="module" src="/src/main.js"></script>
