@@ -93,12 +93,12 @@ export const options = {
 let stepController = gui.add(options, 'step', 0, 1).step(1);
 
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
+gui.add(options, 'collapseAndDeselect').name("Collapse tree and remove selection (esc)");
+gui.add(options, 'removeSelection').name("Remove current selection (q)");
 gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
 gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
 gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
 gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
-gui.add(options, 'collapseAndDeselect').name("Collapse tree and remove selection (esc)");
-gui.add(options, 'removeSelection').name("Remove current selection (q)");
 
 export function addGroundTruth(gt) {
     gtFrames.push(gt);
@@ -367,31 +367,53 @@ window.addEventListener("mousemove", (e) => {
 
 });
 
+let pressedMesh = null; // Temporary storage for the "down" phase
+
 window.addEventListener("mousedown", (e) => {
-    if (!rayCaster) return;
+    if (!rayCaster || e.button !== 0) return;
     updateMouse(e);
 
     rayCaster.setFromCamera(mousePosition, camera);
     const intersections = rayCaster.intersectObjects(clickableMeshes, false);
 
-    // LEFT CLICK → select object
-    if (e.button === 0) {
+    if (intersections.length > 0) {
+        pressedMesh = intersections[0].object;
+    } else {
+        pressedMesh = null;
+    }
+});
 
-        if (intersections.length === 0) return;
+window.addEventListener("mouseup", (e) => {
+    if (!rayCaster || e.button !== 0 || !pressedMesh) return;
+    updateMouse(e);
 
-        const mesh = intersections[0].object;
+    rayCaster.setFromCamera(mousePosition, camera);
+    const intersections = rayCaster.intersectObjects(clickableMeshes, false);
 
-        if (selectedMesh && selectedMesh !== mesh) {
-            setEmissive(selectedMesh, stylingColors.pitchBlack);
-        }
+    if (intersections.length > 0) {
+        const releasedMesh = intersections[0].object;
 
-        selectedMesh = mesh;
-        setEmissive(selectedMesh, stylingColors.selectedMesh);
+        // ONLY select if the object released is the same as the one pressed
+        if (releasedMesh === pressedMesh) {
+            
+            // 1. Clean up previous selection
+            if (selectedMesh && selectedMesh !== releasedMesh) {
+                setEmissive(selectedMesh, stylingColors.pitchBlack);
+            }
 
-        if (mesh.userData.osiId) {
-            focusAndExpandObject(mesh.userData.topic, mesh.userData.osiId);
+            // 2. Set new selection
+            selectedMesh = releasedMesh;
+            setEmissive(selectedMesh, stylingColors.selectedMesh);
+
+            // 3. UI logic
+            if (selectedMesh.userData.osiId) {
+                focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
+            }
         }
     }
+    
+    // Always reset the pressed state on mouseup
+    pressedMesh = null;
 });
 
 window.addEventListener('keydown', onKeyDown);
