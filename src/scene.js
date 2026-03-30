@@ -409,6 +409,17 @@ window.addEventListener("mouseup", (e) => {
 
             // 3. UI logic
             if (selectedMesh.userData.osiId) {
+                const treeContainer = document.querySelector('.treeContainer');
+
+                // We first go to top of the view, then find and expand so we have consistent behavior
+                if (treeContainer) {
+                    treeContainer.scrollTop = 0;
+                }
+
+                if (!e.shiftKey) {
+                    collapseTree();
+                }
+
                 focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
             }
         }
