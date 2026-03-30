@@ -75,7 +75,8 @@ function createNode(key, data) {
 
     if (isObject) {
         const title = document.createElement("span");
-        title.textContent = key;
+        title.innerHTML = `<span class="node-key">${key}</span>`;
+        // title.textContent = key;
         title.classList.add("caret");
         
         const childrenUl = document.createElement("ul");
@@ -115,7 +116,7 @@ function createNode(key, data) {
         };
     } else {
         const val = (data === null || data === undefined) ? "" : data;
-        li.innerHTML = `${key} <span class="leaf-value">${val}</span>`;
+        li.innerHTML = `<span class="node-key">${key}</span> <span class="leaf-value">${val}</span>`;
     }
     return li;
 }
@@ -210,7 +211,7 @@ function syncBranchOrLeaf(li, key, newData) {
     // 2. REVERSE: Object -> Null
     if (!isNewDataValidObject && childrenUl) {
         li.classList.remove("open");
-        li.innerHTML = `${key} <span class="leaf-value">${newData ?? ""}</span>`;
+        li.innerHTML = `<span class="node-key">${key}</span> <span class="leaf-value">${newData ?? ""}</span>`;
         triggerFlash(li); // Flash because the data vanished
         return;
     }

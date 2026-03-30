@@ -171,6 +171,21 @@ html, body {
     transition: background-color 0.2s;
 }
 
+.node-key {
+    font-weight: bold;
+    color: #efefef; /* Slightly brighter to pop against the background */
+}
+
+/* Optional: add a tiny bit of space after the colon */
+.node-key {
+    margin-right: 4px;
+}
+
+/* Ensure the caret span (which contains the key for parent nodes) is also bold */
+.caret .node-key {
+    font-weight: bold;
+}
+
     </style>
     </head>
   <body>
