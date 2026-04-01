@@ -300,8 +300,9 @@ stepController.onChange((value) => {
     currentFrameUpdated = false;
 });
 
+const viewer = document.getElementById("viewer");
+
 window.addEventListener('resize', () => {
-    const viewer = document.getElementById("viewer");
     const width = viewer.clientWidth;
     const height = viewer.clientHeight;
     camera.aspect = width / height;
@@ -311,7 +312,7 @@ window.addEventListener('resize', () => {
 
 function updateMouse(e) {
     // This returns the canvas position and size in screen space.
-    const rect = renderer.domElement.getBoundingClientRect();
+    const rect = viewer.getBoundingClientRect();
     // normale -1 .. 1
     mousePosition.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mousePosition.y = (-(e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -332,7 +333,8 @@ function setEmissive(mesh, colorHex) {
     }
 }
 
-window.addEventListener("mousemove", (e) => {
+
+viewer.addEventListener("mousemove", (e) => {
 
     if (!rayCaster) return;
 
@@ -371,7 +373,7 @@ window.addEventListener("mousemove", (e) => {
 
 let pressedMesh = null; // Temporary storage for the "down" phase
 
-window.addEventListener("mousedown", (e) => {
+viewer.addEventListener("mousedown", (e) => {
     if (!rayCaster || e.button !== 0) return;
     updateMouse(e);
 
@@ -385,7 +387,7 @@ window.addEventListener("mousedown", (e) => {
     }
 });
 
-window.addEventListener("mouseup", (e) => {
+viewer.addEventListener("mouseup", (e) => {
     if (!rayCaster || e.button !== 0 || !pressedMesh) return;
     updateMouse(e);
 

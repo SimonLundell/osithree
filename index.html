@@ -38,6 +38,8 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Prevents tree from pushing sidebar width */
+  pointer-events: all; /* This is usually the default, but good to be sure */
+  z-index: 20
 }
 
 #resizer {
