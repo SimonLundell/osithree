@@ -54,14 +54,6 @@ html, body {
   background: rgba(74, 158, 255, 0.5); /* Blue highlight on hover */
 }
 
-.treeContainer {
-  flex: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-
-
 /* File loader row */
 
 .fileRow {
@@ -96,6 +88,7 @@ html, body {
 
 .treeContainer {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -109,25 +102,33 @@ html, body {
 }
 
 .tree li {
-  padding: 4px 12px;
+  padding: 2px 0;
   cursor: pointer;
+  position: relative;
+}
+
+.tree li > .caret:hover,
+.tree li > .node-key:hover,
+.tree li > .leaf-value:hover {
+    background: rgba(165, 30, 30, 0.308);
+    border-radius: 0px;
 }
 
 .tree li:hover {
-  background: rgba(255,255,255,0.05);
+  background: transparent;
 }
 
 /* Expand arrows */
 
 .tree .node::before {
-  content: "▸";
+  content: "+";
   display: inline-block;
   width: 14px;
   color: rgb(150,150,150);
 }
 
 .tree .node.open::before {
-  content: "▾";
+  content: "-";
 }
 
 /* Children */
