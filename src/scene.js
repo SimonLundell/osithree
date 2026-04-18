@@ -100,9 +100,14 @@ gui.add(options, 'togglePlay').name('Play / Pause (space)');
 gui.add(options, 'collapseAndDeselect').name("Collapse tree and remove selection (esc)");
 gui.add(options, 'removeSelection').name("Remove current selection (q)");
 gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
-gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
 gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
 gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
+
+// Toggle button
+gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
+
+// Manual Input Fields
+const folder = gui.addFolder('Axes Position');
 
 export function addGroundTruth(gt) {
     gtFrames.push(gt);
@@ -150,6 +155,10 @@ export function setupScene() {
     axesHelper = new THREE.AxesHelper(1000);
     scene.add(axesHelper);
     axesHelper.visible = options.aHelper;
+
+    folder.add(axesHelper.position, 'x').name('X Coord');
+    folder.add(axesHelper.position, 'y').name('Y Coord');
+    folder.add(axesHelper.position, 'z').name('Z Coord');
 
     osiRoot.add(osiPoints);
     osiPoints.visible = options.osiPoints;

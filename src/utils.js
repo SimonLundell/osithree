@@ -324,15 +324,83 @@ function initTrafficSigns(trafficSigns) {
     trafficSigns.forEach(trafficSign => {
         let geometry = null;
         const tsShape = trafficSignShape.get(trafficSign.mainSign.classification.type);
-        if (tsShape == signShape.ELLIPSE) {
-            const height = trafficSign.mainSign.base.dimension.height;
-            const width = trafficSign.mainSign.base.dimension.width;
+        
+        if (tsShape === undefined) return;
+
+        const height = trafficSign.mainSign.base.dimension.height;
+        const width = trafficSign.mainSign.base.dimension.width;
+
+        if (tsShape === signShape.ELLIPSE) {
             const shape = new THREE.Shape();
             shape.absellipse(0, 0, height * 0.5, width * 0.5, 0, Math.PI * 2, false, 0);
             geometry = new THREE.ExtrudeGeometry(shape, {
                 depth: 0.02,
                 bevelEnabled: false
             });
+        }
+        else if (tsShape === signShape.RECTANGLE) {
+            geometry = new THREE.BoxGeometry(width, height, 0.02);
+        }
+        else if (tsShape === signShape.RECTANGLE_90) {
+            // width/height after box rotated 45 degrees
+            const localW = width / Math.sqrt(2);
+            const localH = height / Math.sqrt(2);
+            geometry = new THREE.BoxGeometry(localW, localH, 0.02);
+            geometry.rotateZ(-Math.PI / 4);
+        }
+        else if (tsShape === signShape.OCTAGON) {
+            const shape = new THREE.Shape();
+            const rx = width / 2;
+            const ry = height / 2;
+            const sides = 8;
+            
+            // Offset by 22.5 degrees (PI/8) to ensure flat top/bottom
+            const offset = Math.PI / 8; 
+
+            for (let i = 0; i < sides; i++) {
+                const theta = (i / sides) * Math.PI * 2 + offset;
+                const x = rx * Math.cos(theta);
+                const y = ry * Math.sin(theta);
+                
+                if (i === 0) {
+                    shape.moveTo(x, y);
+                } else {
+                    shape.lineTo(x, y);
+                }
+            }
+            shape.closePath();
+
+            geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.02,
+                bevelEnabled: false
+            });
+        }
+        else if (tsShape === signShape.TRIANGLE || tsShape === signShape.TRIANGLE_INV) {
+            const shape = new THREE.Shape();
+
+            const halfW = width / 2;
+            const halfH = height / 2;
+
+            // Start at the bottom-left
+            shape.moveTo(-halfW, -halfH);
+            // Move to the bottom-right
+            shape.lineTo(halfW, -halfH);
+            // Move to the top-middle
+            shape.lineTo(0, halfH);
+            
+            shape.closePath();
+
+            geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.02,
+                bevelEnabled: false
+            });
+
+            let zRotation = -Math.PI / 2;
+            if (tsShape === signShape.TRIANGLE_INV) {
+                zRotation -= Math.PI;
+            }
+
+            geometry.rotateZ(zRotation);
         }
         else {
             return;
