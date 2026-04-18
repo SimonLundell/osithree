@@ -20,6 +20,7 @@ export const trafficLightColor = new Map([
 export const stylingColors = {
     pitchBlack: 0x000000,
     basicBlack: 0x111111,
+    basicGray: 0x636363,
     hoveredMesh: 0x777777,
     selectedMesh: 0xAAAAAA
 }
@@ -63,6 +64,5 @@ export const dynamicRoots = [
     "timestamp",
     "environmentalConditions",
     "movingObject",
-    "trafficLight",
-    "trafficSign"
+    "trafficLight"
 ];

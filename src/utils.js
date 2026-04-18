@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { laneBoundaryColor, trafficLightColor, stylingColors } from "./constants";
-import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiMovingObjects, options } from "./scene";
+import { trafficSignShape, signShape } from "./trafficSigns.js";
+import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiTrafficSigns, osiMovingObjects, options } from "./scene";
 import { initTree, updateTree } from "./uiUtils.js";
 import { FOVHelper } from "./fovhelper";
 
@@ -16,6 +17,7 @@ export function initFromGroundTruth(gt) {
     initLaneBoundaries(gt.laneBoundary);
     initStationaryObjects(gt.stationaryObject);
     initTrafficLights(gt.trafficLight);
+    initTrafficSigns(gt.trafficSign);
     initMovingObjs(gt.movingObject);
 }
 
@@ -69,9 +71,9 @@ function setPosAndAngle(mesh, base, offset = 0) {
 }
 
 function setClickable(topic, obj, mesh) {
+    mesh.userData.topic = topic;
     mesh.userData.osiObj = obj;
     mesh.userData.osiId = obj.id.value;
-    mesh.userData.topic = topic;
 
     clickableMeshes.push(mesh);
 }
@@ -315,6 +317,38 @@ function initTrafficLights(trafficLights) {
         osiTrafficLights.add(mesh);
 
         trafficLightMap.set(trafficLight.id.value, mesh);
+    });
+}
+
+function initTrafficSigns(trafficSigns) {
+    trafficSigns.forEach(trafficSign => {
+        let geometry = null;
+        const tsShape = trafficSignShape.get(trafficSign.mainSign.classification.type);
+        if (tsShape == signShape.ELLIPSE) {
+            const height = trafficSign.mainSign.base.dimension.height;
+            const width = trafficSign.mainSign.base.dimension.width;
+            const shape = new THREE.Shape();
+            shape.absellipse(0, 0, height * 0.5, width * 0.5, 0, Math.PI * 2, false, 0);
+            geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.02,
+                bevelEnabled: false
+            });
+        }
+        else {
+            return;
+        }
+        
+        geometry.rotateY(-Math.PI / 2);
+        const material = new THREE.MeshStandardMaterial({ color: stylingColors.basicGray });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.geometry.computeBoundingSphere();
+
+        setPosAndAngle(mesh, trafficSign.mainSign.base);
+        setClickable("trafficSign", trafficSign, mesh);
+
+        osiTrafficSigns.add(mesh);
+        osiTrafficSigns.userData.meshes.push(mesh);
     });
 }
 

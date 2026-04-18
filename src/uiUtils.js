@@ -4,23 +4,27 @@ export function focusAndExpandObject(topic, osiId) {
     const topicLi = document.querySelector(`#gtTree > li[data-node-key='${topic}']`);
     if (!topicLi) return;
 
+    // 1. Get ALL list items under this topic to find the index node ([0], [1], etc.)
     const indexNodes = topicLi.querySelectorAll(":scope > ul > li");
     let targetIndexLi = null;
+    const searchId = String(osiId).trim();
 
     for (const li of indexNodes) {
-        const allSpans = li.querySelectorAll(".leaf-value");
+        // 1. Find the 'id' branch first. This is the crucial filter.
+        const idBranch = li.querySelector("li[data-node-key='id']");
         
-        for (const span of allSpans) {
-            if (span.textContent.trim() === String(osiId)) {
-                // Get the 'li' containing the value 14
-                const valueLi = span.closest('li'); 
-                // Get the 'li' above it (should be 'id')
-                const idLi = valueLi.parentElement.closest('li'); 
-
-                // Check if we are inside an "id" structure
-                if (idLi && idLi.dataset.nodeKey === "id") {
-                    targetIndexLi = li; // This is the [0], [1] index node
-                    break;
+        if (idBranch) {
+            // 2. Inside the ID branch, look for the 'value' leaf
+            const allLeafSpans = idBranch.querySelectorAll(".leaf-value");
+            
+            for (const span of allLeafSpans) {
+                if (span.textContent.trim() === searchId) {
+                    // Double check this specific leaf is indeed the "value" 
+                    const parentLi = span.closest('li');
+                    if (parentLi && parentLi.dataset.nodeKey === "value") {
+                        targetIndexLi = li;
+                        break;
+                    }
                 }
             }
         }
@@ -28,24 +32,21 @@ export function focusAndExpandObject(topic, osiId) {
     }
 
     if (targetIndexLi) {
-        // 1. Open the Topic (e.g. movingObjects)
+        // ... (Expansion logic)
         topicLi.classList.add("open");
-
-        // 2. Open the Index ([0], [1], etc)
         targetIndexLi.classList.add("open");
 
-        // 3. Open ALL nested properties (id, base, position, etc)
+        // Expand sub-properties
         const nestedNodes = targetIndexLi.querySelectorAll("li.node");
         nestedNodes.forEach(n => n.classList.add("open"));
 
-        // 4. Scroll and Flash
+        // Use 'center' block to ensure the item isn't at the very bottom edge
         targetIndexLi.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         
-        const caret = targetIndexLi.querySelector(":scope > .caret");
-        if (caret) {
-            caret.classList.add("updated-flash");
-            setTimeout(() => caret.classList.remove("updated-flash"), 1000);
-        }
+        targetIndexLi.classList.add("updated-flash");
+        setTimeout(() => targetIndexLi.classList.remove("updated-flash"), 1000);
+    } else {
+        console.warn(`Search failed: ID ${searchId} not found under ${topic}.`);
     }
 }
 

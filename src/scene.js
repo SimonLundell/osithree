@@ -36,6 +36,7 @@ export const osiBoundaries = new THREE.Group(); // Container for osiBoundaries
 export const osiRoadMarkBoundaries = new THREE.Group(); // Container for osiBoundaries which are roadMarks
 export const osiStationaryObjects = new THREE.Group();
 export const osiTrafficLights = new THREE.Group();
+export const osiTrafficSigns = new THREE.Group();
 export const osiMovingObjects = new THREE.Group();
 
 export const options = {
@@ -56,6 +57,9 @@ export const options = {
                     child.visible = !this.wireframe;
                 }
             });
+        });
+        osiTrafficSigns.userData.meshes.forEach(mesh => {
+            mesh.material.wireframe = this.wireframe;
         });
     },
 
@@ -162,6 +166,10 @@ export function setupScene() {
     osiRoot.add(osiTrafficLights);
     osiTrafficLights.wireframe = options.wireframe;
 
+    osiRoot.add(osiTrafficSigns);
+    osiTrafficSigns.wireframe = options.wireframe;
+    osiTrafficSigns.userData.meshes = []; // To toggle wireframe
+
     osiRoot.add(osiMovingObjects);
 
     camera.position.set(-5, -30, 20);
@@ -198,6 +206,7 @@ export function resetScene() {
     osiRoadMarkBoundaries.clear();
     osiStationaryObjects.clear();
     osiTrafficLights.clear();
+    osiTrafficSigns.clear();
     movingObjectMap.clear();
     osiMovingObjects.clear();
 
