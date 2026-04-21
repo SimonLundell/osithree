@@ -140,6 +140,8 @@ export function setupScene() {
     orbit.screenSpacePanning = false;
     orbit.minDistance = 3;
     orbit.maxDistance = 300;
+    orbit.minPolarAngle = 0.1; 
+    orbit.maxPolarAngle = Math.PI - 0.1;
 
     orbit.addEventListener('start', () => userInteracting = true);
     orbit.addEventListener('end', () => {
@@ -257,15 +259,24 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+let lastVehiclePos = new THREE.Vector3();
+
 function followVehicle() {
     if (!cameraVehicle) {
         return;
     }
 
+    const deltaMove = new THREE.Vector3().subVectors(cameraVehicle.position, lastVehiclePos);
+
     orbitTarget.copy(cameraVehicle.position);
     orbit.target.copy(orbitTarget);
 
-    if (!userInteracting) {
+    if (userInteracting) {
+        // PATCH: Move the camera by the same delta so it "keeps up" with the car 
+        // while you are rotating/panning.
+        camera.position.add(deltaMove);
+    }
+    else {
         const worldOffset = followOffset.clone().applyQuaternion(cameraVehicle.quaternion);
 
         const desiredCameraPos =
@@ -273,6 +284,10 @@ function followVehicle() {
 
         camera.position.copy(desiredCameraPos);
     }
+
+    lastVehiclePos.copy(cameraVehicle.position);
+
+    orbit.update();
 }
 
 function resetFollowCamera() {

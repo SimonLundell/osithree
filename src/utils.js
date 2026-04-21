@@ -402,8 +402,8 @@ function initTrafficSigns(trafficSigns) {
 
             geometry.rotateZ(zRotation);
         }
-        else {
-            return;
+        else { // UNKNOWN, or an X, just make a box
+            geometry = new THREE.BoxGeometry(width, height, 0.02);
         }
         
         geometry.rotateY(-Math.PI / 2);
