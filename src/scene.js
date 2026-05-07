@@ -135,7 +135,7 @@ export function setupScene() {
     viewer.appendChild(renderer.domElement);
     
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0x2b2b2b);
+    renderer.setClearColor(stylingColors.softGray);
 
     // Camera
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);

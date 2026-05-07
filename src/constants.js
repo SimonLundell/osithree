@@ -20,6 +20,7 @@ export const trafficLightColor = new Map([
 export const stylingColors = {
     pitchBlack: 0x000000,
     basicBlack: 0x111111,
+    softGray: 0x2b2b2b,
     basicGray: 0x636363,
     hoveredMesh: 0x777777,
     selectedMesh: 0xAAAAAA

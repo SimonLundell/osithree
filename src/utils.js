@@ -96,7 +96,10 @@ function initMovingObj(obj) {
     const height = obj.base.dimension.height;
     const length = obj.base.dimension.length;
     const boxGeometry = new THREE.BoxGeometry(length, width, height);
-    // const color = obj.base.colorDescription.rgb
+    const color = 0x1111AA;
+    if (obj.colorDescription != null && obj.colorDescription.rgb != null) {
+        color = obj.colorDescription.rgb.value;
+    }
     const boxMaterial = new THREE.MeshStandardMaterial({
         color: 0x1111AA,
         wireframe: false,
@@ -105,9 +108,10 @@ function initMovingObj(obj) {
     });
     const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
     addEdges(mesh);
-    const axesHelper = new THREE.AxesHelper();
+    const minDim = Math.min(width, height, length);
+    const axesHelper = new THREE.AxesHelper(minDim / 2);
     mesh.add(axesHelper);
-    mesh.add(refPoint());
+    mesh.add(refPoint(minDim / 6));
 
     /* Maybe fix later
     const fovHelper = new FOVHelper({
@@ -496,9 +500,10 @@ function updateSceneLimits(point) {
     if (point.z < sceneLimits.minZ) sceneLimits.minZ = point.z;
 }
 
-function refPoint() {
-    const sphereGeometry = new THREE.SphereGeometry(0.2);
-    const sphereMaterial = new THREE.MeshStandardMaterial({color: 0x3399FF});
+function refPoint(size) {
+    if (size > 0.2) size = 0.2;
+    const sphereGeometry = new THREE.SphereGeometry(size);
+    const sphereMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb});
     return new THREE.Mesh(sphereGeometry, sphereMaterial);
 }
 
