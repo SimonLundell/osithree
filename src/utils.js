@@ -8,6 +8,14 @@ import { FOVHelper } from "./fovhelper";
 export const movingObjectMap = new Map();
 export const trafficLightMap = new Map();
 export const clickableMeshes = [];
+export const sceneLimits = {
+    minX: Infinity,
+    maxX: -Infinity,
+    minY: Infinity,
+    maxY: -Infinity,
+    minZ: Infinity
+};
+
 export let hostVehicleId = null;
 
 export function initFromGroundTruth(gt) {
@@ -53,6 +61,11 @@ export function clearUtils() {
     trafficLightMap.clear();
     clickableMeshes.length = 0;
     hostVehicleId = null;
+    sceneLimits.minX = Infinity;
+    sceneLimits.maxX = -Infinity;
+    sceneLimits.minY = Infinity;
+    sceneLimits.maxY = -Infinity;
+    sceneLimits.minZ = Infinity;
 }
 
 function initMetaData(gt) {
@@ -471,13 +484,22 @@ function addPoint(point, color = 0xFFFFFF) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(point);
     osiPoints.add(mesh);
+
+    updateSceneLimits(point);
+}
+
+function updateSceneLimits(point) {
+    if (point.x < sceneLimits.minX) sceneLimits.minX = point.x;
+    if (point.x > sceneLimits.maxX) sceneLimits.maxX = point.x;
+    if (point.y < sceneLimits.minY) sceneLimits.minY = point.y;
+    if (point.y > sceneLimits.maxY) sceneLimits.maxY = point.y;
+    if (point.z < sceneLimits.minZ) sceneLimits.minZ = point.z;
 }
 
 function refPoint() {
     const sphereGeometry = new THREE.SphereGeometry(0.2);
     const sphereMaterial = new THREE.MeshStandardMaterial({color: 0x3399FF});
     return new THREE.Mesh(sphereGeometry, sphereMaterial);
-
 }
 
 function buildDashedStripGeometry(

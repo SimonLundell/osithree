@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils } from "./utils";
+import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils, sceneLimits } from "./utils";
 import { focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
@@ -30,6 +30,7 @@ let selectedObjectIndex = null;
 let cameraMode = cameraModes.FOLLOW;
 let hoveredMesh = null;
 let selectedMesh = null;
+let currentGroundPlane = null;
 
 export const osiPoints = new THREE.Group(); // Container for osiPoints
 export const osiBoundaries = new THREE.Group(); // Container for osiBoundaries
@@ -91,6 +92,12 @@ export const options = {
     collapseAndDeselect() {
         this.removeSelection();
         collapseTree();
+    },
+
+    groundPlane: true,
+    toggleGroundPlane() {
+        this.groundPlane = !this.groundPlane;
+        currentGroundPlane.visible = this.groundPlane;
     }
 }
 
@@ -102,11 +109,10 @@ gui.add(options, 'removeSelection').name("Remove current selection (q)");
 gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
 gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
 gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
-
-// Toggle button
-gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
+gui.add(options, 'toggleGroundPlane').name('Toggle ground grid (g)');
 
 // Manual Input Fields
+gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
 const folder = gui.addFolder('Axes Position');
 
 export function addGroundTruth(gt) {
@@ -118,19 +124,22 @@ export function addGroundTruth(gt) {
 }
 
 export function setupScene() {
+    // Some basic inits
     scene.add(osiRoot);
     THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
     const viewer = document.getElementById("viewer");
     
-    camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-    
+    // Renderer 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(viewer.clientWidth, viewer.clientHeight);
     viewer.appendChild(renderer.domElement);
     
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0x222222);
+    renderer.setClearColor(0x2b2b2b);
 
+    // Camera
+    camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.set(-5, -30, 20);
     initResizableSidebar(camera, renderer);
     
     orbit = new OrbitControls(camera, renderer.domElement);
@@ -154,14 +163,25 @@ export function setupScene() {
         followOffset.copy(camera.position).sub(orbitTarget).applyQuaternion(cameraVehicle.quaternion.clone().invert());
     });
 
+    orbit.update();
+
+    // Light
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF);
+    scene.add(ambientLight);
+
+    // Raycaster
+    rayCaster = new THREE.Raycaster();
+
+    // Helpers
     axesHelper = new THREE.AxesHelper(1000);
     scene.add(axesHelper);
     axesHelper.visible = options.aHelper;
 
-    folder.add(axesHelper.position, 'x').name('X Coord');
-    folder.add(axesHelper.position, 'y').name('Y Coord');
-    folder.add(axesHelper.position, 'z').name('Z Coord');
+    folder.add({ x: "0" }, 'x').name('X').onFinishChange(value => { axesHelper.position.x = parseFloat(value) || 0; });
+    folder.add({ y: "0" }, 'y').name('Y').onFinishChange(value => { axesHelper.position.y = parseFloat(value) || 0; });
+    folder.add({ z: "0" }, 'z').name('Z').onFinishChange(value => { axesHelper.position.z = parseFloat(value) || 0; });
 
+    // OSI
     osiRoot.add(osiPoints);
     osiPoints.visible = options.osiPoints;
 
@@ -183,15 +203,46 @@ export function setupScene() {
 
     osiRoot.add(osiMovingObjects);
 
-    camera.position.set(-5, -30, 20);
-    orbit.update();
-
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF);
-    scene.add(ambientLight);
-
-    rayCaster = new THREE.Raycaster();
-
     animate();
+}
+
+function createGroundPlane(sceneLimits) {
+    const width = sceneLimits.maxX - sceneLimits.minX + 5;
+    const height = sceneLimits.maxY - sceneLimits.minY + 5;
+    const centerX = (sceneLimits.minX + sceneLimits.maxX) / 2;
+    const centerY = (sceneLimits.minY + sceneLimits.maxY) / 2;
+
+    const geometry = new THREE.PlaneGeometry(width, height);
+    
+    // Create a 1x1 canvas texture for the grid line
+    const loader = new THREE.TextureLoader();
+    // Using a data URI for a simple grid pattern so you don't need an external image file
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 64, 64);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    // This repeats the texture every 5 meter
+    texture.repeat.set(width / 5, height / 5);
+
+    const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0.2,
+        color: 0x999999,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+
+    const plane = new THREE.Mesh(geometry, material);
+    plane.position.set(centerX, centerY, sceneLimits.minZ - 0.1);
+
+    return plane;
 }
 
 export function resetScene() {
@@ -221,6 +272,22 @@ export function resetScene() {
     movingObjectMap.clear();
     osiMovingObjects.clear();
 
+    if (currentGroundPlane) {
+        scene.remove(currentGroundPlane);
+        
+        currentGroundPlane.geometry.dispose();
+        
+        // 2. Dispose Texture (It lives inside the material's map)
+        if (currentGroundPlane.material.map) {
+            currentGroundPlane.material.map.dispose();
+        }
+        
+        // 3. Dispose Material
+        currentGroundPlane.material.dispose();
+        
+        currentGroundPlane = null;
+    } 
+
     clearUtils();
 }
 
@@ -239,6 +306,9 @@ function animate() {
         }
         gtInitialized = true;
         currentFrameUpdated = true;
+
+        currentGroundPlane = createGroundPlane(sceneLimits);
+        scene.add(currentGroundPlane);
     } 
 
     if (!currentFrameUpdated) {
@@ -507,6 +577,9 @@ function onKeyDown(event) {
             break;
         case 'b':
             options.toggleBoundaries();
+            break;
+        case 'g':
+            options.toggleGroundPlane();
             break;
         case 'p':
             options.toggleOsiPoints();
