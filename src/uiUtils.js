@@ -299,7 +299,7 @@ export function initResizableSidebar(camera, renderer) {
         let newWidth = e.clientX;
 
         // Apply constraints (match these to your CSS min/max)
-        if (newWidth < 200) newWidth = 200;
+        if (newWidth < 0.5) newWidth = 0.5;
         if (newWidth > 800) newWidth = 800;
 
         sidebar.style.width = `${newWidth}px`;
