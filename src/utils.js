@@ -96,33 +96,39 @@ function initMovingObj(obj) {
     const height = obj.base.dimension.height;
     const length = obj.base.dimension.length;
     const boxGeometry = new THREE.BoxGeometry(length, width, height);
-    const color = 0x1111AA;
-    if (obj.colorDescription != null && obj.colorDescription.rgb != null) {
-        color = obj.colorDescription.rgb.value;
+    const color = new THREE.Color(0x1111AA);
+    if (obj.colorDescription?.rgb) {
+        color.setRGB(
+            obj.colorDescription.rgb.red,
+            obj.colorDescription.rgb.green,
+            obj.colorDescription.rgb.blue
+        );
     }
     const boxMaterial = new THREE.MeshStandardMaterial({
-        color: 0x1111AA,
+        color: color,
         wireframe: false,
         transparent: true,
-        opacity: 0.5
+        opacity: 1.0
     });
     const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
-    addEdges(mesh);
+
+    // Refpoint
     const minDim = Math.min(width, height, length);
-    const axesHelper = new THREE.AxesHelper(minDim / 2);
-    mesh.add(axesHelper);
     mesh.add(refPoint(minDim / 6));
 
-    /* Maybe fix later
-    const fovHelper = new FOVHelper({
-        fov: 90,
-        range: 15,
-        color: 0xFFFFFF
-    });
-    fovHelper.rotation.x = -Math.PI / 2;
-    fovHelper.rotation.y = Math.PI / 2;
-    box.add(fovHelper);
-    */
+    // Edges
+    addEdges(mesh);
+
+    // Direction indication
+    const dir = new THREE.Vector3(1, 0, 0);
+    dir.normalize();
+    const totalLength = 0.4;
+    const arrowOrigin = new THREE.Vector3(-totalLength / 2, 0, (height / 2) + 0.2);
+    const headLength = 0.3;
+    const headWidth = 0.2;
+    const arrowColor = 0x00EE00;
+    const forwardArrow = new THREE.ArrowHelper(dir, arrowOrigin, totalLength, arrowColor, headLength, headWidth);
+    mesh.add(forwardArrow);
 
     osiMovingObjects.add(mesh);
     
