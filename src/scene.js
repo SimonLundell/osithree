@@ -204,7 +204,12 @@ export function setupScene() {
     const viewer = document.getElementById("viewer");
     
     // Renderer 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: false,
+        powerPreference: "high-performance",
+        precision: "lowp"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(viewer.clientWidth, viewer.clientHeight);
     viewer.appendChild(renderer.domElement);
     
@@ -389,6 +394,7 @@ function animate() {
 
     if (!currentFrameUpdated) {
         updateFromGroundTruth(latestGt);
+        currentFrameUpdated = true;
     }
 
     if (cameraMode == cameraModes.FOLLOW) {
@@ -399,6 +405,7 @@ function animate() {
         stepForward(1);
         stepController.setValue(frameIndex);
         options.play = true;
+        currentFrameUpdated = false;
     }
 
     orbit.update();
