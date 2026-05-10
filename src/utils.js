@@ -125,6 +125,32 @@ function initMovingObj(obj) {
     const forwardArrow = buildHelperArrow(arrowOrigin, 0.3, 0.2, arrowLength, 0x00EE00)
     mesh.add(forwardArrow);
 
+    // 2D outline
+    if (obj.base.basePolygon && obj.base.basePolygon.length > 0) {
+        const points = [];    
+        const pointGeometry = new THREE.SphereGeometry(0.03);
+        const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xCCCCCC });
+        obj.base.basePolygon.forEach(polygon => {
+            const point = new THREE.Vector3(polygon.x, polygon.y, -height / 2);
+            points.push(point)
+            
+            const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+            pointMesh.position.copy(point);
+            mesh.add(pointMesh);
+        });
+
+        const outlineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const outlineMaterial = new THREE.LineBasicMaterial({
+            color: 0xCCCCCC,
+            linewidth: 2
+        })
+
+        const outline = new THREE.LineLoop(outlineGeometry, outlineMaterial);
+        outline.name = "2DOutline";
+        mesh.add(outline);
+    }
+        
+
     osiMovingObjects.add(mesh);
     osiMovingObjects.userData.meshes.push(mesh);
     
@@ -483,9 +509,9 @@ function addEdges(mesh, color = 0x000000) {
     mesh.add(line);
 }
 
-function addPoint(point, color = 0xFFFFFF) {
-    const geometry = new THREE.SphereGeometry(0.15);
-    const material = new THREE.MeshStandardMaterial({color: color});
+function addPoint(point, color = 0xCCCCCC, size = 0.15) {
+    const geometry = new THREE.SphereGeometry(size);
+    const material = new THREE.MeshBasicMaterial({color: color});
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(point);
     osiPoints.add(mesh);
@@ -504,7 +530,7 @@ function updateSceneLimits(point) {
 function refPoint(size) {
     if (size > 0.2) size = 0.2;
     const sphereGeometry = new THREE.SphereGeometry(size);
-    const sphereMaterial = new THREE.MeshStandardMaterial({color: 0xDDDDDD});
+    const sphereMaterial = new THREE.MeshBasicMaterial({color: 0xDDDDDD});
     return new THREE.Mesh(sphereGeometry, sphereMaterial);
 }
 
@@ -631,3 +657,4 @@ function drawGeometryFromPoints(points, depth = 0.02) {
 
     return geometry;
 }
+
