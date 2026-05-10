@@ -120,14 +120,9 @@ function initMovingObj(obj) {
     addEdges(mesh);
 
     // Direction indication
-    const dir = new THREE.Vector3(1, 0, 0);
-    dir.normalize();
-    const totalLength = 0.4;
-    const arrowOrigin = new THREE.Vector3(-totalLength / 2, 0, (height / 2) + 0.2);
-    const headLength = 0.3;
-    const headWidth = 0.2;
-    const arrowColor = 0x00EE00;
-    const forwardArrow = new THREE.ArrowHelper(dir, arrowOrigin, totalLength, arrowColor, headLength, headWidth);
+    const arrowLength = 0.4;
+    const arrowOrigin = new THREE.Vector3(-arrowLength / 2, 0, (height / 2) + 0.2);
+    const forwardArrow = buildHelperArrow(arrowOrigin, 0.3, 0.2, arrowLength, 0x00EE00)
     mesh.add(forwardArrow);
 
     osiMovingObjects.add(mesh);
@@ -363,13 +358,22 @@ function initTrafficSigns(trafficSigns) {
             });
         }
         else if (tsShape === signShape.RECTANGLE) {
-            geometry = new THREE.BoxGeometry(width, height, 0.02);
+            const bottom_left = new THREE.Vector2(-width / 2, -height / 2);
+            const bottom_right = new THREE.Vector2(width / 2, -height / 2);
+            const top_right = new THREE.Vector2(width / 2, height / 2);
+            const top_left = new THREE.Vector2(-width / 2, height / 2);
+            geometry = drawGeometryFromPoints([bottom_left, bottom_right, top_right, top_left]);
+            geometry.rotateZ(-Math.PI / 2);
         }
-        else if (tsShape === signShape.RECTANGLE_90) {
+        else if (tsShape === signShape.RECTANGLE_45) {
             // width/height after box rotated 45 degrees
             const localW = width / Math.sqrt(2);
             const localH = height / Math.sqrt(2);
-            geometry = new THREE.BoxGeometry(localW, localH, 0.02);
+            const bottom_left = new THREE.Vector2(-localW / 2, -localH / 2);
+            const bottom_right = new THREE.Vector2(localW / 2, -localH / 2);
+            const top_right = new THREE.Vector2(localW / 2, localH / 2);
+            const top_left = new THREE.Vector2(-localW / 2, localH / 2);
+            geometry = drawGeometryFromPoints([bottom_left, bottom_right, top_right, top_left]);
             geometry.rotateZ(-Math.PI / 4);
         }
         else if (tsShape === signShape.OCTAGON) {
@@ -381,43 +385,23 @@ function initTrafficSigns(trafficSigns) {
             // Offset by 22.5 degrees (PI/8) to ensure flat top/bottom
             const offset = Math.PI / 8; 
 
+            const points = [];
             for (let i = 0; i < sides; i++) {
                 const theta = (i / sides) * Math.PI * 2 + offset;
-                const x = rx * Math.cos(theta);
-                const y = ry * Math.sin(theta);
-                
-                if (i === 0) {
-                    shape.moveTo(x, y);
-                } else {
-                    shape.lineTo(x, y);
-                }
+                const point = new THREE.Vector2(rx * Math.cos(theta), ry * Math.sin(theta));
+                points.push(point);
             }
-            shape.closePath();
-
-            geometry = new THREE.ExtrudeGeometry(shape, {
-                depth: 0.02,
-                bevelEnabled: false
-            });
+            geometry = drawGeometryFromPoints(points);
         }
         else if (tsShape === signShape.TRIANGLE || tsShape === signShape.TRIANGLE_INV) {
             const shape = new THREE.Shape();
 
             const halfW = width / 2;
             const halfH = height / 2;
-
-            // Start at the bottom-left
-            shape.moveTo(-halfW, -halfH);
-            // Move to the bottom-right
-            shape.lineTo(halfW, -halfH);
-            // Move to the top-middle
-            shape.lineTo(0, halfH);
-            
-            shape.closePath();
-
-            geometry = new THREE.ExtrudeGeometry(shape, {
-                depth: 0.02,
-                bevelEnabled: false
-            });
+            const bottom_left = new THREE.Vector2(-halfW, -halfH);
+            const bottom_right = new THREE.Vector2(halfW, -halfH);
+            const top_middle = new THREE.Vector2(0, halfH);
+            geometry = drawGeometryFromPoints([bottom_left, top_middle, bottom_right]);
 
             let zRotation = -Math.PI / 2;
             if (tsShape === signShape.TRIANGLE_INV) {
@@ -427,7 +411,13 @@ function initTrafficSigns(trafficSigns) {
             geometry.rotateZ(zRotation);
         }
         else { // UNKNOWN, or an X, just make a box
-            geometry = new THREE.BoxGeometry(width, height, 0.02);
+            const shape =  new THREE.Shape();
+            const bottom_left = new THREE.Vector2(-width / 2, -height / 2);
+            const bottom_right = new THREE.Vector2(width / 2, -height / 2);
+            const top_right = new THREE.Vector2(width / 2, height / 2);
+            const top_left = new THREE.Vector2(-width / 2, height / 2);
+            geometry = drawGeometryFromPoints([bottom_left, bottom_right, top_right, top_left]);
+            geometry.rotateZ(-Math.PI / 2);
         }
         
         geometry.rotateY(-Math.PI / 2);
@@ -435,6 +425,11 @@ function initTrafficSigns(trafficSigns) {
 
         const mesh = new THREE.Mesh(geometry, material);
         mesh.geometry.computeBoundingSphere();
+
+        const arrowLength = 0.1;
+        const arrowOrigin = new THREE.Vector3(arrowLength / 2, 0, 0);
+        const forwardArrow = buildHelperArrow(arrowOrigin, 0.05, 0.025, arrowLength, 0x00EE00)
+        mesh.add(forwardArrow);
 
         setPosAndAngle(mesh, trafficSign.mainSign.base);
         setClickable("trafficSign", trafficSign, mesh);
@@ -607,6 +602,32 @@ function buildStripGeometry(points, width, zOffset = 0.01) {
         new THREE.Float32BufferAttribute(positions, 3)
     );
     geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+function buildHelperArrow(position, headLength, headWidth, totalLength, color = 0x00EE00) {
+    const dir = new THREE.Vector3(1, 0, 0);
+    dir.normalize();
+    return new THREE.ArrowHelper(dir, position, totalLength, color, headLength, headWidth);
+}
+
+function drawGeometryFromPoints(points, depth = 0.02) {
+    const shape = new THREE.Shape();
+    for (let i = 0; i < points.length; i++) {
+        if (i === 0) {
+            shape.moveTo(points[i].x, points[i].y);
+        } 
+        else {
+            shape.lineTo(points[i].x, points[i].y);
+        }
+    }
+    shape.closePath();
+
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: depth,
+        bevelEnabled: false
+    });
 
     return geometry;
 }
