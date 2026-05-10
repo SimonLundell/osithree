@@ -123,6 +123,7 @@ function initMovingObj(obj) {
     const arrowLength = 0.4;
     const arrowOrigin = new THREE.Vector3(-arrowLength / 2, 0, (height / 2) + 0.2);
     const forwardArrow = buildHelperArrow(arrowOrigin, 0.3, 0.2, arrowLength, 0x00EE00)
+    forwardArrow.name = "forwardArrow";
     mesh.add(forwardArrow);
 
     // 2D outline
@@ -136,17 +137,19 @@ function initMovingObj(obj) {
             
             const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
             pointMesh.position.copy(point);
+            pointMesh.name = "outlinePoint";
+            pointMesh.visible = false;
             mesh.add(pointMesh);
         });
 
         const outlineGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const outlineMaterial = new THREE.LineBasicMaterial({
             color: 0xCCCCCC,
-            linewidth: 2
         })
 
         const outline = new THREE.LineLoop(outlineGeometry, outlineMaterial);
         outline.name = "2DOutline";
+        outline.visible = false;
         mesh.add(outline);
     }
         
@@ -504,8 +507,9 @@ function addEdges(mesh, color = 0x000000) {
     const edges = new THREE.EdgesGeometry(mesh.geometry);
     const line = new THREE.LineSegments(
         edges,
-        new THREE.LineBasicMaterial({ color })
+        new THREE.LineBasicMaterial({ color: color, transparent: true })
     );
+    line.name = "boxEdges";
     mesh.add(line);
 }
 
@@ -530,8 +534,14 @@ function updateSceneLimits(point) {
 function refPoint(size) {
     if (size > 0.2) size = 0.2;
     const sphereGeometry = new THREE.SphereGeometry(size);
-    const sphereMaterial = new THREE.MeshBasicMaterial({color: 0xDDDDDD});
-    return new THREE.Mesh(sphereGeometry, sphereMaterial);
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+        color: 0xDDDDDD,
+        transparent: true,
+        depthTest: false
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphereMesh.name = "refPoint";
+    return sphereMesh;
 }
 
 function buildDashedStripGeometry(

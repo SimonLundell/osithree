@@ -102,16 +102,41 @@ export const options = {
     viewModeIdx: 0,
     toggleViewMode() {
         this.viewModeIdx = (this.viewModeIdx + 1) % this.viewModes.length;
-        let opacity = 1.0;
         const mode = this.viewModes[this.viewModeIdx];
+        let opacity = 1.0;
+        let outlineVisible = false;
+
         if (!this.wireframe && mode  === "transparent") {
             opacity = 0.2;
+            outlineVisible = false;
         } 
         else if (!this.wireframe && mode === "hollow") {
             opacity = 0.0;
+            outlineVisible = true;
         }
+
         osiMovingObjects.userData.meshes.forEach(mesh => {
             mesh.material.opacity = opacity;
+            const has2DOutline = !!mesh.getObjectByName("2DOutline");
+
+            mesh.traverse(child => {
+                if (child.name === "2DOutline" || child.name === "outlinePoint") {
+                    child.visible = outlineVisible;
+                }
+
+                if (child.name === "boxEdges") {
+                    child.material.opacity = opacity;
+                }
+
+                if (child.name === "refPoint" || child.name === "forwardArrow") {
+                    if (has2DOutline && mode == "hollow") {
+                        child.visible = outlineVisible;
+                    }
+                    else {
+                        child.visible = !outlineVisible;
+                    }
+                }
+            });
         });
     },
 
