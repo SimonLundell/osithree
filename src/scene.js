@@ -10,7 +10,7 @@ const gtFrames = [];
 const gui = new GUI();
 const mousePosition = new THREE.Vector2();
 const orbitTarget = new THREE.Vector3();
-const standardFollowOffset = new THREE.Vector3(-15, 0, 10);
+const standardFollowOffset = new THREE.Vector3(-18, 0, 7);
 const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
@@ -46,6 +46,19 @@ export const options = {
 
     togglePlay() {
         this.play = !this.play;
+    },
+
+    toggleCameraMode() {
+        if (cameraMode === cameraModes.FOLLOW) {
+            cameraMode = cameraModes.FREE;
+        }
+        else {
+            cameraMode = cameraModes.FOLLOW;
+        }
+    },
+
+    resetCamera() {
+        resetFollowCamera();
     },
 
     groundPlane: true,
@@ -85,13 +98,17 @@ export const options = {
         });
     },
 
-    viewModes: ["filled", "transparent", "outline"],
+    viewModes: ["filled", "transparent", "hollow"],
     viewModeIdx: 0,
     toggleViewMode() {
         this.viewModeIdx = (this.viewModeIdx + 1) % this.viewModes.length;
         let opacity = 1.0;
-        if (!this.wireframe && this.viewModes[this.viewModeIdx] === "transparent") {
+        const mode = this.viewModes[this.viewModeIdx];
+        if (!this.wireframe && mode  === "transparent") {
             opacity = 0.2;
+        } 
+        else if (!this.wireframe && mode === "hollow") {
+            opacity = 0.0;
         }
         osiMovingObjects.userData.meshes.forEach(mesh => {
             mesh.material.opacity = opacity;
@@ -132,6 +149,8 @@ export const options = {
 let stepController = gui.add(options, 'step', 0, 1).step(1);
 
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
+gui.add(options, 'toggleCameraMode').name('Toggle follow (1) / free (2) camera mode');
+gui.add(options, 'resetCamera').name('Reset camera position (r)');
 gui.add(options, 'toggleGroundPlane').name('Toggle grid (g)');
 gui.add(options, 'toggleClearColor').name('Toggle dark/bright backround (c)');
 gui.add(options, 'collapseAndDeselect').name("Remove selection & collapse tree (esc)");
@@ -169,7 +188,7 @@ export function setupScene() {
 
     // Camera
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-    camera.position.set(-5, -30, 20);
+    camera.position.set(standardFollowOffset);
     initResizableSidebar(camera, renderer);
     
     orbit = new OrbitControls(camera, renderer.domElement);
@@ -259,20 +278,20 @@ function createGroundPlane(sceneLimits) {
     
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    // This repeats the texture every 5 meter
-    texture.repeat.set(width / 5, height / 5);
+    // This repeats the texture every 1 meter
+    texture.repeat.set(width, height);
 
     const material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
         opacity: 0.2,
-        color: 0x999999,
+        color: stylingColors.groundPlane,
         depthWrite: false,
         side: THREE.DoubleSide
     });
 
     const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(centerX, centerY, sceneLimits.minZ - 0.1);
+    plane.position.set(centerX, centerY, sceneLimits.minZ - 0.1); // Slightly below lowest z
 
     return plane;
 }
@@ -285,7 +304,7 @@ export function resetScene() {
     gtInitialized = false;
     frameIndex = 0;
     orbit.update();
-    camera.position.set(-5, -30, 20);
+    camera.position.set(standardFollowOffset);
     cameraVehicle = null;
     userInteracting = null;
     selectedObjectIndex = null;
@@ -602,7 +621,7 @@ function onKeyDown(event) {
             options.toggleViewMode();
             break;
         case '1':
-            resetFollowCamera();
+            cameraMode = cameraModes.FOLLOW;
             break;
         case '2':
             cameraMode = cameraModes.FREE;
@@ -624,6 +643,9 @@ function onKeyDown(event) {
             break;
         case 'q':
             options.removeSelection();
+            break;
+        case 'r':
+            options.resetCamera();
             break;
         case 'w':
             options.toggleWireframe();

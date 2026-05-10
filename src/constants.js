@@ -24,7 +24,8 @@ export const stylingColors = {
     basicGray: 0x636363,
     hoveredMesh: 0x777777,
     selectedMesh: 0xAAAAAA,
-    brightWhite: 0xFFFFFF
+    brightWhite: 0xFFFFFF,
+    groundPlane: 0x999999
 }
 
 export const cameraModes = Object.freeze({
