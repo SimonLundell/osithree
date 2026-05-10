@@ -48,6 +48,23 @@ export const options = {
         this.play = !this.play;
     },
 
+    groundPlane: true,
+    toggleGroundPlane() {
+        this.groundPlane = !this.groundPlane;
+        currentGroundPlane.visible = this.groundPlane;
+    },
+
+    clearColorDark: true,
+    toggleClearColor() {
+        this.clearColorDark = !this.clearColorDark;
+        if (this.clearColorDark) {
+            renderer.setClearColor(stylingColors.softGray);
+        }
+        else {
+            renderer.setClearColor(stylingColors.brightWhite);
+        }
+    },
+
     wireframe: false,
     toggleWireframe() {
         this.wireframe = !this.wireframe;
@@ -61,6 +78,23 @@ export const options = {
         });
         osiTrafficSigns.userData.meshes.forEach(mesh => {
             mesh.material.wireframe = this.wireframe;
+        });
+        osiMovingObjects.userData.meshes.forEach(mesh => {
+            mesh.material.wireframe = this.wireframe;
+            mesh.material.opacity = 1.0;
+        });
+    },
+
+    viewModes: ["filled", "transparent", "outline"],
+    viewModeIdx: 0,
+    toggleViewMode() {
+        this.viewModeIdx = (this.viewModeIdx + 1) % this.viewModes.length;
+        let opacity = 1.0;
+        if (!this.wireframe && this.viewModes[this.viewModeIdx] === "transparent") {
+            opacity = 0.2;
+        }
+        osiMovingObjects.userData.meshes.forEach(mesh => {
+            mesh.material.opacity = opacity;
         });
     },
 
@@ -92,24 +126,20 @@ export const options = {
     collapseAndDeselect() {
         this.removeSelection();
         collapseTree();
-    },
-
-    groundPlane: true,
-    toggleGroundPlane() {
-        this.groundPlane = !this.groundPlane;
-        currentGroundPlane.visible = this.groundPlane;
     }
 }
 
 let stepController = gui.add(options, 'step', 0, 1).step(1);
 
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
-gui.add(options, 'collapseAndDeselect').name("Collapse tree and remove selection (esc)");
-gui.add(options, 'removeSelection').name("Remove current selection (q)");
+gui.add(options, 'toggleGroundPlane').name('Toggle grid (g)');
+gui.add(options, 'toggleClearColor').name('Toggle dark/bright backround (c)');
+gui.add(options, 'collapseAndDeselect').name("Remove selection & collapse tree (esc)");
+gui.add(options, 'removeSelection').name("Remove selection (q)");
 gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
 gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
 gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
-gui.add(options, 'toggleGroundPlane').name('Toggle ground grid (g)');
+gui.add(options, 'toggleViewMode').name('Toggle moving object view mode (,)');
 
 // Manual Input Fields
 gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
@@ -202,6 +232,8 @@ export function setupScene() {
     osiTrafficSigns.userData.meshes = []; // To toggle wireframe
 
     osiRoot.add(osiMovingObjects);
+    osiMovingObjects.wireframe = options.wireframe;
+    osiMovingObjects.userData.meshes = [];
 
     animate();
 }
@@ -566,6 +598,9 @@ function onKeyDown(event) {
             }
             selectNextVehicle(dir);
             break;
+        case ',':
+            options.toggleViewMode();
+            break;
         case '1':
             resetFollowCamera();
             break;
@@ -577,6 +612,9 @@ function onKeyDown(event) {
             break;
         case 'b':
             options.toggleBoundaries();
+            break;
+        case 'c':
+            options.toggleClearColor();
             break;
         case 'g':
             options.toggleGroundPlane();

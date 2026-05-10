@@ -131,6 +131,7 @@ function initMovingObj(obj) {
     mesh.add(forwardArrow);
 
     osiMovingObjects.add(mesh);
+    osiMovingObjects.userData.meshes.push(mesh);
     
     setPosAndAngle(mesh, obj.base);
     setClickable("movingObject", obj, mesh);
@@ -474,7 +475,6 @@ function updateMovingObj(obj) {
     const mesh = movingObjectMap.get(obj.id.value);
     if (mesh) {
         setPosAndAngle(mesh, mesh.userData.osiObj.base);
-        mesh.material.wireframe = options.wireframe;
     }
     mesh.userData.osiObj = obj;
 }
@@ -509,7 +509,7 @@ function updateSceneLimits(point) {
 function refPoint(size) {
     if (size > 0.2) size = 0.2;
     const sphereGeometry = new THREE.SphereGeometry(size);
-    const sphereMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb});
+    const sphereMaterial = new THREE.MeshStandardMaterial({color: 0xDDDDDD});
     return new THREE.Mesh(sphereGeometry, sphereMaterial);
 }
 
