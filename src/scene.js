@@ -15,7 +15,6 @@ const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
 
-let latestGt = null;
 let gtInitialized = false;
 let frameIndex = 0;
 let currentFrameUpdated = false;
@@ -205,11 +204,11 @@ export function setupScene() {
     
     // Renderer 
     renderer = new THREE.WebGLRenderer({ 
-        antialias: false,
+        antialias: true,
         powerPreference: "high-performance",
-        precision: "lowp"
+        precision: "mediump"
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(1);
     renderer.setSize(viewer.clientWidth, viewer.clientHeight);
     viewer.appendChild(renderer.domElement);
     
@@ -285,6 +284,58 @@ export function setupScene() {
     osiMovingObjects.userData.meshes = [];
 
     animate();
+
+    checkDataAndInit();
+}
+
+function checkDataAndInit() {
+    if (gtFrames && gtFrames.length > 0 && !gtInitialized) {
+        const firstGt = gtFrames[0];
+        initFromGroundTruth(firstGt);
+     
+        console.log(firstGt);
+     
+        cameraVehicle = movingObjectMap.get(hostVehicleId);
+        if (cameraVehicle) {
+            resetFollowCamera();
+        }
+        
+        // We can get the scene limits once all data is initialized
+        currentGroundPlane = createGroundPlane(sceneLimits);
+        scene.add(currentGroundPlane);
+
+        gtInitialized = true;
+    }
+    else if (!gtInitialized) {
+        setTimeout(checkDataAndInit, 100); // Try again in 100ms if not ready
+    }
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (gtInitialized && gtFrames.length > 0) {
+        const latestGt = gtFrames[frameIndex]; 
+
+        if (!currentFrameUpdated && latestGt) {
+            updateFromGroundTruth(latestGt);
+            currentFrameUpdated = true;
+        }
+
+        if (options.play) {
+            stepForward(1);
+            stepController.setValue(frameIndex);
+            options.play = true;
+            currentFrameUpdated = false;
+        }
+    }
+
+    if (cameraMode == cameraModes.FOLLOW) {
+        followVehicle();
+    }
+
+    orbit.update();
+    renderer.render(scene, camera);
 }
 
 function createGroundPlane(sceneLimits) {
@@ -304,11 +355,11 @@ function createGroundPlane(sceneLimits) {
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = "white";
     ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, 64, 64);
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
     
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    // This repeats the texture every 1 meter
+    // This repeats the texture every 1 meter, 
     texture.repeat.set(width, height);
 
     const material = new THREE.MeshBasicMaterial({
@@ -330,7 +381,6 @@ export function resetScene() {
     gtFrames.length = 0;
     orbitTarget.set(0, 0, 0);
 
-    latestGt = null;
     gtInitialized = false;
     frameIndex = 0;
     orbit.update();
@@ -370,46 +420,6 @@ export function resetScene() {
     } 
 
     clearUtils();
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    latestGt = gtFrames[frameIndex];
-    if (!latestGt) return;
-
-    if (!gtInitialized) {
-        initFromGroundTruth(latestGt);
-        console.log(latestGt);
-        cameraVehicle = movingObjectMap.get(hostVehicleId);
-        if (cameraVehicle) {
-            resetFollowCamera();
-        }
-        gtInitialized = true;
-        currentFrameUpdated = true;
-
-        currentGroundPlane = createGroundPlane(sceneLimits);
-        scene.add(currentGroundPlane);
-    } 
-
-    if (!currentFrameUpdated) {
-        updateFromGroundTruth(latestGt);
-        currentFrameUpdated = true;
-    }
-
-    if (cameraMode == cameraModes.FOLLOW) {
-        followVehicle();
-    }
-
-    if (gtFrames.length > 0 && options.play) {
-        stepForward(1);
-        stepController.setValue(frameIndex);
-        options.play = true;
-        currentFrameUpdated = false;
-    }
-
-    orbit.update();
-    renderer.render(scene, camera);
 }
 
 let lastVehiclePos = new THREE.Vector3();
