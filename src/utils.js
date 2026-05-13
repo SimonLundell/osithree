@@ -50,6 +50,8 @@ export function updateFromGroundTruth(gt) {
     });
 
     updateTree(gt);
+
+    return true;
 }
 
 export function fmt(n, digits = 3) {
@@ -497,10 +499,11 @@ function updateMovingObj(obj) {
     }
 
     const mesh = movingObjectMap.get(obj.id.value);
-    if (mesh) {
-        setPosAndAngle(mesh, mesh.userData.osiObj.base);
-    }
+
+    if (!mesh) return;
+
     mesh.userData.osiObj = obj;
+    setPosAndAngle(mesh, mesh.userData.osiObj.base);
 }
 
 function addEdges(mesh, color = 0x000000) {

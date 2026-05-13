@@ -3,7 +3,7 @@ import { GUI } from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils, sceneLimits } from "./utils";
-import { focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
+import { updateTree, focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
 const gtFrames = [];
@@ -17,7 +17,8 @@ const osiRoot = new THREE.Group();
 
 let gtInitialized = false;
 let frameIndex = 0;
-let currentFrameUpdated = false;
+let needsSceneUpdate = false;
+let suppressControllerCallback = false;
 let orbit = null;
 let camera = null;
 let renderer = null;
@@ -314,24 +315,24 @@ function checkDataAndInit() {
 function animate() {
     requestAnimationFrame(animate);
 
-    if (gtInitialized && gtFrames.length > 0) {
-        const latestGt = gtFrames[frameIndex]; 
+    if (options.play) {
+        frameIndex = (frameIndex + 1) % gtFrames.length;
+        needsSceneUpdate = true;
+    }
 
-        if (!currentFrameUpdated && latestGt) {
-            updateFromGroundTruth(latestGt);
-            currentFrameUpdated = true;
-        }
-
-        if (options.play) {
-            stepForward(1);
-            stepController.setValue(frameIndex);
-            options.play = true;
-            currentFrameUpdated = false;
-        }
+    if (needsSceneUpdate && gtInitialized && gtFrames.length > 0) {
+        updateFromGroundTruth(gtFrames[frameIndex]);
+        needsSceneUpdate = false;
     }
 
     if (cameraMode == cameraModes.FOLLOW) {
         followVehicle();
+    }
+
+    if (stepController.getValue() !== frameIndex) {
+        suppressControllerCallback = true;
+        stepController.setValue(frameIndex);
+        suppressControllerCallback = false;
     }
 
     orbit.update();
@@ -477,23 +478,21 @@ function selectNextVehicle(dir) {
 
 function stepForward(steps) {
     frameIndex = (frameIndex + steps) % gtFrames.length;
-    stepController.setValue(frameIndex);
     options.play = false;
-    currentFrameUpdated = false;
+    needsSceneUpdate = true;
 }
 
 function stepBackward(steps) {
     frameIndex = frameIndex + steps;
     if (frameIndex < 0) frameIndex = gtFrames.length + frameIndex;
-    stepController.setValue(frameIndex);
     options.play = false;
-    currentFrameUpdated = false;
+    needsSceneUpdate = true;
 }
 
 stepController.onChange((value) => {
+    if (suppressControllerCallback) return;
     frameIndex = Math.floor(value);
-    options.play = false;
-    currentFrameUpdated = false;
+    needsSceneUpdate = true;
 });
 
 const viewer = document.getElementById("viewer");
@@ -595,7 +594,6 @@ viewer.addEventListener("mouseup", (e) => {
 
         // ONLY select if the object released is the same as the one pressed
         if (releasedMesh === pressedMesh) {
-            
             // 1. Clean up previous selection
             if (selectedMesh && selectedMesh !== releasedMesh) {
                 setEmissive(selectedMesh, stylingColors.pitchBlack);
@@ -617,7 +615,6 @@ viewer.addEventListener("mouseup", (e) => {
                 if (!e.shiftKey) {
                     collapseTree();
                 }
-
                 focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
             }
         }
