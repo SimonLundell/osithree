@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { CSS2DObject } from "three/examples/jsm/Addons.js";
 import { laneBoundaryColor, trafficLightColor, stylingColors } from "./constants";
 import { trafficSignShape, signShape } from "./trafficSigns.js";
 import { osiPoints, osiBoundaries, osiRoadMarkBoundaries, osiStationaryObjects, osiTrafficLights, osiTrafficSigns, osiMovingObjects, options } from "./scene";
@@ -127,6 +128,12 @@ function initMovingObj(obj) {
     const forwardArrow = buildHelperArrow(arrowOrigin, 0.3, 0.2, arrowLength, 0x00EE00)
     forwardArrow.name = "forwardArrow";
     mesh.add(forwardArrow);
+
+    const labelString = `ID: ${obj.id.value}
+    Pos: (${obj.base.position.x.toFixed(2)}, ${obj.base.position.y.toFixed(2)}, ${obj.base.position.z.toFixed(2)})
+    Ori: (${obj.base.orientation.yaw.toFixed(2)}, ${obj.base.orientation.pitch.toFixed(2)}, ${obj.base.orientation.roll.toFixed(2)}) rad
+    Vel: (${obj.base.velocity.x.toFixed(2)}, ${obj.base.velocity.y.toFixed(2)}, ${obj.base.velocity.z.toFixed(2)}) m/s`;
+    addFlatHoverLabel(mesh, labelString, height);
 
     // 2D outline
     if (obj.base.basePolygon && obj.base.basePolygon.length > 0) {
@@ -671,3 +678,41 @@ function drawGeometryFromPoints(points, depth = 0.02) {
     return geometry;
 }
 
+function addFlatHoverLabel(mesh, textStr, height) { 
+    // 1. Create the OUTER WRAPPER (This is what Three.js will control and translate)
+    const wrapper = document.createElement('div');
+    wrapper.className = 'label-wrapper';
+    
+    // 2. Create the INNER TEXT BLOCK (This belongs entirely to you — Three.js won't touch its styles)
+    const textElement = document.createElement('div'); 
+    textElement.className = 'vehicle-hover-label'; 
+    textElement.textContent = textStr; 
+     
+    // Style the actual text block
+    textElement.style.color = '#ddeb15'; 
+    textElement.style.fontFamily = 'sans-serif'; 
+    textElement.style.fontSize = '12px'; 
+    textElement.style.fontWeight = '500'; 
+    textElement.style.userSelect = 'none'; 
+    textElement.style.whiteSpace = 'pre-line'; 
+    textElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';  
+
+    // NOW THIS WILL WORK PERFECTLY: Anchor it by its bottom-center
+    textElement.style.transform = 'translate(0%, -75%)'; 
+    textElement.style.paddingBottom = '1px'; 
+    
+    // Setup smooth sizing/opacity transitions for the distance scaling
+    textElement.style.transformOrigin = 'bottom center'; 
+
+    // 3. Assemble the hierarchy
+    wrapper.appendChild(textElement);
+
+    // 4. Wrap the OUTER wrapper into Three.js
+    const labelObject = new CSS2DObject(wrapper); 
+     
+    // Position it at the roof line of the car bounding box
+    labelObject.position.set(0, 0, (height / 2)); 
+    labelObject.name = 'hoverLabel2D'; 
+     
+    mesh.add(labelObject); 
+}

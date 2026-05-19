@@ -1,6 +1,6 @@
 import * as THREE from "three";
+import { OrbitControls, CSS2DRenderer } from "three/examples/jsm/Addons.js";
 import { GUI } from "dat.gui";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils, sceneLimits } from "./utils";
 import { updateTree, focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
@@ -16,12 +16,14 @@ const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
 
 let gtInitialized = false;
+let latestGt = null;
 let frameIndex = 0;
 let needsSceneUpdate = false;
 let suppressControllerCallback = false;
 let orbit = null;
 let camera = null;
 let renderer = null;
+let labelRenderer = null;
 let rayCaster = null;
 let axesHelper = null;
 let cameraVehicle = null;
@@ -191,7 +193,6 @@ const folder = gui.addFolder('Axes Position');
 
 export function addGroundTruth(gt) {
     gtFrames.push(gt);
-
     if (stepController) {
         stepController.max(gtFrames.length - 1);
     }
@@ -215,6 +216,13 @@ export function setupScene() {
     
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(stylingColors.softGray);
+
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(viewer.clientWidth, viewer.clientHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none'; // Allow pointer events through label
+    viewer.appendChild(labelRenderer.domElement);
 
     // Camera
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
@@ -321,7 +329,8 @@ function animate() {
     }
 
     if (needsSceneUpdate && gtInitialized && gtFrames.length > 0) {
-        updateFromGroundTruth(gtFrames[frameIndex]);
+        latestGt = gtFrames[frameIndex]
+        updateFromGroundTruth(latestGt);
         needsSceneUpdate = false;
     }
 
@@ -337,6 +346,10 @@ function animate() {
 
     orbit.update();
     renderer.render(scene, camera);
+
+    if (labelRenderer) {
+        labelRenderer.render(scene, camera);
+    }
 }
 
 function createGroundPlane(sceneLimits) {
@@ -503,6 +516,7 @@ window.addEventListener('resize', () => {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
+    labelRenderer.setSize(width, height);
 });
 
 function updateMouse(e) {
