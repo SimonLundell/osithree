@@ -1,3 +1,4 @@
+import { options, latestGt } from "./scene";
 import { GT_ORDER, AUTO_EXPAND, dynamicRoots } from "./constants";
 
 export function focusAndExpandObject(topic, osiId) {
@@ -114,6 +115,11 @@ function createNode(key, data) {
                     }
                 });
             }
+
+            // Ensure update if we manually expand the tree
+            if (isOpening && !options.play && latestGt) {
+                updateTree(latestGt);
+            }
         };
     } else {
         const val = (data === null || data === undefined) ? "" : data;
@@ -139,6 +145,7 @@ export function collapseTree() {
 }
 
 export function updateTree(gt) {
+    if (!gt) return;
     // Look for all roots that are designated as dynamic
     const roots = document.querySelectorAll("#gtTree > li[data-dynamic='true']");
     

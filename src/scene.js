@@ -16,7 +16,6 @@ const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
 
 let gtInitialized = false;
-let latestGt = null;
 let frameIndex = 0;
 let needsSceneUpdate = false;
 let suppressControllerCallback = false;
@@ -34,6 +33,7 @@ let hoveredMesh = null;
 let selectedMesh = null;
 let currentGroundPlane = null;
 
+export let latestGt = null;
 export const osiPoints = new THREE.Group(); // Container for osiPoints
 export const osiBoundaries = new THREE.Group(); // Container for osiBoundaries
 export const osiRoadMarkBoundaries = new THREE.Group(); // Container for osiBoundaries which are roadMarks
@@ -642,6 +642,7 @@ viewer.addEventListener("mouseup", (e) => {
                     collapseTree();
                 }
                 focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
+                updateTree(latestGt); // Ensure update if we click an object
             }
         }
     }
