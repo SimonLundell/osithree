@@ -245,6 +245,7 @@ export function setupScene() {
     orbit.target.set(0, 0, 0);
     orbit.dampingFactor = 0.08;
     orbit.panSpeed = 1.5;
+    orbit.zoomSpeed = 2.0;
     orbit.screenSpacePanning = false;
     orbit.minDistance = 3;
     orbit.maxDistance = 300;
