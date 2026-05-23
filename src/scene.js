@@ -259,7 +259,7 @@ export function setupScene() {
     orbit.panSpeed = 1.5;
     orbit.zoomSpeed = 2.0;
     orbit.screenSpacePanning = false;
-    orbit.minDistance = 3;
+    orbit.minDistance = 0.1;
     orbit.maxDistance = 300;
     orbit.minPolarAngle = 0.1; 
     orbit.maxPolarAngle = Math.PI - 0.1;

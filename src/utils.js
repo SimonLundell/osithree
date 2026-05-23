@@ -533,7 +533,7 @@ function addEdges(mesh, color = 0x000000) {
     mesh.add(line);
 }
 
-function addPoint(point, color = 0xCCCCCC, size = 0.15) {
+function addPoint(point, color = 0xCCCCCC, size = 0.10) {
     const geometry = new THREE.SphereGeometry(size);
     const material = new THREE.MeshBasicMaterial({color: color});
     const mesh = new THREE.Mesh(geometry, material);
