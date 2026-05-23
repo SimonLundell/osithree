@@ -129,10 +129,7 @@ function initMovingObj(obj) {
     forwardArrow.name = "forwardArrow";
     mesh.add(forwardArrow);
 
-    const labelString = `ID: ${obj.id.value}
-    Pos: (${obj.base.position.x.toFixed(2)}, ${obj.base.position.y.toFixed(2)}, ${obj.base.position.z.toFixed(2)})
-    Ori: (${obj.base.orientation.yaw.toFixed(2)}, ${obj.base.orientation.pitch.toFixed(2)}, ${obj.base.orientation.roll.toFixed(2)}) rad
-    Vel: (${obj.base.velocity.x.toFixed(2)}, ${obj.base.velocity.y.toFixed(2)}, ${obj.base.velocity.z.toFixed(2)}) m/s`;
+    const labelString = updateHoverLabelString(obj);
     addFlatHoverLabel(mesh, labelString, height);
 
     // 2D outline
@@ -501,16 +498,26 @@ function removeObj(id, mesh) {
 }
 
 function updateMovingObj(obj) {
+    // If not initiated, initiate it
     if (!movingObjectMap.has(obj.id.value)) {
         initMovingObj(obj);
     }
 
+    // Get the mesh from the map
     const mesh = movingObjectMap.get(obj.id.value);
 
     if (!mesh) return;
 
+    // Update the info connected to the mesh and set the new positions
     mesh.userData.osiObj = obj;
     setPosAndAngle(mesh, mesh.userData.osiObj.base);
+
+    // Update label
+    const labelObj = mesh.getObjectByName("hoverLabel2D");
+    if (labelObj && labelObj.element && labelObj.element.firstElementChild) {
+        const txtEl = labelObj.element.firstElementChild
+        txtEl.textContent = updateHoverLabelString(obj);
+    }
 }
 
 function addEdges(mesh, color = 0x000000) {
@@ -676,6 +683,13 @@ function drawGeometryFromPoints(points, depth = 0.02) {
     });
 
     return geometry;
+}
+
+function updateHoverLabelString(obj) {
+    return `ID: ${obj.id.value}
+    Pos: (${obj.base.position.x.toFixed(2)}, ${obj.base.position.y.toFixed(2)}, ${obj.base.position.z.toFixed(2)})
+    Ori: (${obj.base.orientation.yaw.toFixed(2)}, ${obj.base.orientation.pitch.toFixed(2)}, ${obj.base.orientation.roll.toFixed(2)}) rad
+    Vel: (${obj.base.velocity.x.toFixed(2)}, ${obj.base.velocity.y.toFixed(2)}, ${obj.base.velocity.z.toFixed(2)}) m/s`;
 }
 
 function addFlatHoverLabel(mesh, textStr, height) { 
