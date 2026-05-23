@@ -225,9 +225,11 @@ function initLaneBoundaries(laneBoundaries) {
         // We want to be able to toggle any boundary that isn't solid or dashed line
         if (type == 3 || type == 4) {
             osiRoadMarkBoundaries.add(strip);
+            osiRoadMarkBoundaries.userData.meshes.push(strip);
         }
         else {
             osiBoundaries.add(strip);
+            osiBoundaries.userData.meshes.push(strip);
         }
 
         setClickable("laneBoundary", boundary, strip);
@@ -251,7 +253,8 @@ function initLanes(lanes) {
         setClickable("lane", lane, strip);
         // We want to be able to toggle any boundary that isn't solid or dashed line
         osiBoundaries.add(strip);
-    })
+        osiBoundaries.userData.meshes.push(strip);
+    });
 }
 
 function initStationaryObjects(stationaryObjects) {

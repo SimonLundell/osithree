@@ -97,6 +97,12 @@ export const options = {
                 }
             });
         });
+        osiRoadMarkBoundaries.userData.meshes.forEach(mesh => {
+            mesh.material.wireframe = this.wireframe;
+        });
+        osiBoundaries.userData.meshes.forEach(mesh => {
+            mesh.material.wireframe = this.wireframe;
+        });
         osiTrafficSigns.userData.meshes.forEach(mesh => {
             mesh.material.wireframe = this.wireframe;
         });
@@ -292,9 +298,11 @@ export function setupScene() {
     osiPoints.visible = options.osiPoints;
 
     osiRoot.add(osiBoundaries);
+    osiBoundaries.userData.meshes = [];
     osiBoundaries.visible = options.boundaries;
 
     osiRoot.add(osiRoadMarkBoundaries);
+    osiRoadMarkBoundaries.userData.meshes = [];
 
     osiRoot.add(osiStationaryObjects);
     osiStationaryObjects.wireframe = options.wireframe;
