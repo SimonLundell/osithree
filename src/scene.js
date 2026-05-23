@@ -186,6 +186,13 @@ export const options = {
     removeSelection() {
         if (selectedMesh) {
             setEmissive(selectedMesh, stylingColors.pitchBlack);
+            if (selectedMesh.userData.topic === "point") {
+                selectedMesh.traverse(child => {
+                    if (child.name === "hoverLabel2D") {
+                        child.visible = false;
+                    }
+                });
+            }
             selectedMesh = null;
         }
     },
@@ -623,6 +630,15 @@ viewer.addEventListener("mouseup", (e) => {
                 setEmissive(selectedMesh, stylingColors.pitchBlack);
             }
 
+            // Remove the label from the point, it will either stay removed or added again depending on clicked object
+            if (selectedMesh !== null && selectedMesh.userData.topic === "point") {
+                selectedMesh.traverse(child => {
+                    if (child.name === "hoverLabel2D") {
+                        child.visible = false;
+                    }
+                });
+            }
+
             // 2. Set new selection
             selectedMesh = releasedMesh;
             setEmissive(selectedMesh, stylingColors.selectedMesh);
@@ -642,6 +658,15 @@ viewer.addEventListener("mouseup", (e) => {
                 focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
                 updateTree(latestGt); // Ensure update if we click an object
             }
+            else { // Its a osi point
+                selectedMesh.traverse(child => {
+                    if (child.name === "hoverLabel2D") {
+                        child.visible = true;
+                    }
+                });
+            }
+        }
+        else {
         }
     }
     

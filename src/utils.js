@@ -89,7 +89,7 @@ function setPosAndAngle(mesh, base, offset = 0) {
 function setClickable(topic, obj, mesh) {
     mesh.userData.topic = topic;
     mesh.userData.osiObj = obj;
-    mesh.userData.osiId = obj.id.value;
+    if (obj) mesh.userData.osiId = obj.id.value;
 
     clickableMeshes.push(mesh);
 }
@@ -533,12 +533,15 @@ function addEdges(mesh, color = 0x000000) {
     mesh.add(line);
 }
 
-function addPoint(point, color = 0xCCCCCC, size = 0.10) {
+function addPoint(point, color = 0xDDDDDD, size = 0.10) {
     const geometry = new THREE.SphereGeometry(size);
-    const material = new THREE.MeshBasicMaterial({color: color});
+    const material = new THREE.MeshStandardMaterial({color: color});
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(point);
     osiPoints.add(mesh);
+    setClickable("point", null, mesh);
+    const pointStr = `(${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)})`;
+    addFlatHoverLabel(mesh, pointStr, size);
 
     updateSceneLimits(point);
 }
