@@ -186,7 +186,7 @@ export const options = {
     removeSelection() {
         if (selectedMesh) {
             setEmissive(selectedMesh, stylingColors.pitchBlack);
-            if (selectedMesh.userData.topic === "point") {
+            if (selectedMesh.userData.osiObj === null) {
                 selectedMesh.traverse(child => {
                     if (child.name === "hoverLabel2D") {
                         child.visible = false;
@@ -631,7 +631,7 @@ viewer.addEventListener("mouseup", (e) => {
             }
 
             // Remove the label from the point, it will either stay removed or added again depending on clicked object
-            if (selectedMesh !== null && selectedMesh.userData.topic === "point") {
+            if (selectedMesh !== null && selectedMesh.userData.osiObj === null) {
                 selectedMesh.traverse(child => {
                     if (child.name === "hoverLabel2D") {
                         child.visible = false;
