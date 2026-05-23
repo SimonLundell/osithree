@@ -703,15 +703,14 @@ function addFlatHoverLabel(mesh, textStr, height) {
     textElement.textContent = textStr; 
      
     // Style the actual text block
-    textElement.style.color = '#ddeb15'; 
+    textElement.style.color = '#eefe0c'; 
     textElement.style.fontFamily = 'sans-serif'; 
     textElement.style.fontSize = '12px'; 
-    textElement.style.fontWeight = '500'; 
+    textElement.style.fontWeight = '650'; 
     textElement.style.userSelect = 'none'; 
     textElement.style.whiteSpace = 'pre-line'; 
     textElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';  
 
-    // NOW THIS WILL WORK PERFECTLY: Anchor it by its bottom-center
     textElement.style.transform = 'translate(0%, -75%)'; 
     textElement.style.paddingBottom = '1px'; 
     
