@@ -17,6 +17,8 @@ const osiRoot = new THREE.Group();
 
 let gtInitialized = false;
 let frameIndex = 0;
+let lastClockTime = performance.now();
+let timeAccumulator = 0;
 let needsSceneUpdate = false;
 let suppressControllerCallback = false;
 let orbit = null;
@@ -306,11 +308,9 @@ export function setupScene() {
     osiMovingObjects.userData.meshes = [];
 
     animate();
-
-    checkDataAndInit();
 }
 
-function checkDataAndInit() {
+export function checkDataAndInit() {
     if (gtFrames && gtFrames.length > 0 && !gtInitialized) {
         const firstGt = gtFrames[0];
         initFromGroundTruth(firstGt);
@@ -336,9 +336,42 @@ function checkDataAndInit() {
 function animate() {
     requestAnimationFrame(animate);
 
-    if (options.play) {
-        frameIndex = (frameIndex + 1) % gtFrames.length;
-        needsSceneUpdate = true;
+    const currentClockTime = performance.now();
+    let dt = (currentClockTime - lastClockTime) / 1000;
+    lastClockTime = currentClockTime;
+    if (dt > 0.1) dt = 0.1;
+
+    if (options.play && gtInitialized && gtFrames.length > 0) {
+        timeAccumulator += dt;
+
+        while (gtFrames.length > 0) {
+            const currentFrame = gtFrames[frameIndex];
+            const nextFrameIdx = (frameIndex + 1) % gtFrames.length;
+            const nextFrame = gtFrames[nextFrameIdx];
+            const currentTime = getOsiTimeInSeconds(currentFrame);
+            const nextTime = getOsiTimeInSeconds(nextFrame); 
+
+            let frameDuration = nextTime - currentTime;
+
+            if (frameDuration <= 0 || frameIndex === gtFrames.length - 1) {
+                frameDuration = 0.033; // Default fallback step (e.g., 30fps baseline duration)
+            }
+
+            if (timeAccumulator >= frameDuration) {
+                timeAccumulator -= frameDuration;
+                frameIndex = nextFrameIdx;
+                latestGt = gtFrames[frameIndex];
+
+                updateFromGroundTruth(latestGt);
+                needsSceneUpdate = false;
+            }
+            else {
+                break;
+            }
+        }
+    }
+    else {
+        timeAccumulator = 0;
     }
 
     if (needsSceneUpdate && gtInitialized && gtFrames.length > 0) {
@@ -363,6 +396,17 @@ function animate() {
     if (labelRenderer) {
         labelRenderer.render(scene, camera);
     }
+}
+
+function getOsiTimeInSeconds(frame) {
+    // Fallback checks in case a frame is missing a timestamp sub-object
+    if (!frame || !frame.timestamp) return 0;
+    
+    const seconds = frame.timestamp.seconds || 0;
+    const nanos = frame.timestamp.nanos || 0;
+    
+    // Convert nanos to fractional seconds and add to whole seconds
+    return seconds + (nanos / 1000000000);
 }
 
 function createGroundPlane(sceneLimits) {
@@ -406,6 +450,7 @@ function createGroundPlane(sceneLimits) {
 
 export function resetScene() {
     gtFrames.length = 0;
+    latestGt = null;
     orbitTarget.set(0, 0, 0);
 
     gtInitialized = false;
@@ -418,6 +463,8 @@ export function resetScene() {
     cameraMode = cameraModes.FOLLOW;
     hoveredMesh = null;
     selectedMesh = null;
+    lastClockTime = performance.now();
+    timeAccumulator = 0;
 
     stepController.setValue(frameIndex);
 

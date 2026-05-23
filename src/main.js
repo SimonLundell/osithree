@@ -1,7 +1,7 @@
 // npm run dev
 
 import { decodeOSIFile } from "./osiDecoder.js";
-import { setupScene, addGroundTruth, resetScene } from "./scene.js";
+import { setupScene, addGroundTruth, resetScene, checkDataAndInit } from "./scene.js";
 
 setupScene();
 
@@ -21,5 +21,7 @@ fileInput.addEventListener("change", (e) => {
   decodeOSIFile(file, (groundTruth) => {
     addGroundTruth(groundTruth);
   });
+
+  checkDataAndInit();
 
 });
