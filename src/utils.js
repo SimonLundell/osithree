@@ -713,6 +713,7 @@ function addFlatHoverLabel(mesh, textStr, height) {
     // Position it at the roof line of the car bounding box
     labelObject.position.set(0, 0, (height / 2)); 
     labelObject.name = 'hoverLabel2D'; 
+    labelObject.visible = false;
      
     mesh.add(labelObject); 
 }

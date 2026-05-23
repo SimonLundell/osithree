@@ -142,6 +142,17 @@ export const options = {
         });
     },
 
+    toggleInfoLabel() {
+        osiMovingObjects.userData.meshes.forEach(mesh => {
+
+            mesh.traverse(child => {
+                if (child.name === "hoverLabel2D") {
+                    child.visible = !child.visible;
+                }
+            });
+        });
+    },
+
     aHelper: false,
     toggleAxisHelper() {
         this.aHelper = !this.aHelper;
@@ -177,6 +188,7 @@ let stepController = gui.add(options, 'step', 0, 1).step(1);
 
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
 gui.add(options, 'toggleCameraMode').name('Toggle follow (1) / free (2) camera mode');
+gui.add(options, 'toggleInfoLabel').name('Toggle hovering label (i)');
 gui.add(options, 'resetCamera').name('Reset camera position (r)');
 gui.add(options, 'toggleGroundPlane').name('Toggle grid (g)');
 gui.add(options, 'toggleClearColor').name('Toggle dark/bright backround (c)');
@@ -690,6 +702,9 @@ function onKeyDown(event) {
             break;
         case 'g':
             options.toggleGroundPlane();
+            break;
+        case 'i':
+            options.toggleInfoLabel();
             break;
         case 'p':
             options.toggleOsiPoints();
