@@ -2,18 +2,19 @@ import * as THREE from "three";
 import { OrbitControls, CSS2DRenderer } from "three/examples/jsm/Addons.js";
 import { GUI } from "dat.gui";
 
-import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils, sceneLimits } from "./utils";
+import { initFromGroundTruth, updateFromGroundTruth, movingObjectMap, hostVehicleId, clickableMeshes, clearUtils, createGroundPlane, getOsiTimeInSeconds } from "./utils";
 import { updateTree, focusAndExpandObject, collapseTree, initResizableSidebar } from "./uiUtils.js";
 import { cameraModes, stylingColors } from "./constants.js";
 
-const gtFrames = [];
 const gui = new GUI();
+const gtFrames = [];
 const mousePosition = new THREE.Vector2();
 const orbitTarget = new THREE.Vector3();
 const standardFollowOffset = new THREE.Vector3(-18, 0, 7);
 const followOffset = standardFollowOffset.clone();
 const scene = new THREE.Scene();
 const osiRoot = new THREE.Group();
+const viewer = document.getElementById("viewer");
 
 let gtInitialized = false;
 let frameIndex = 0;
@@ -33,7 +34,9 @@ let selectedObjectIndex = null;
 let cameraMode = cameraModes.FOLLOW;
 let hoveredMesh = null;
 let selectedMesh = null;
+let pressedMesh = null; // Temporary storage for the "down" phase
 let currentGroundPlane = null;
+let lastVehiclePos = new THREE.Vector3();
 
 export let latestGt = null;
 export const osiPoints = new THREE.Group(); // Container for osiPoints
@@ -44,6 +47,7 @@ export const osiTrafficLights = new THREE.Group();
 export const osiTrafficSigns = new THREE.Group();
 export const osiMovingObjects = new THREE.Group();
 
+// Options
 export const options = {
     play: false,
     step: 0,
@@ -187,7 +191,6 @@ export const options = {
 }
 
 let stepController = gui.add(options, 'step', 0, 1).step(1);
-
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
 gui.add(options, 'toggleCameraMode').name('Toggle follow (1) / free (2) camera mode');
 gui.add(options, 'toggleInfoLabel').name('Toggle hovering label (i)');
@@ -205,6 +208,7 @@ gui.add(options, 'toggleViewMode').name('Toggle moving object view mode (,)');
 gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
 const folder = gui.addFolder('Axes Position');
 
+// Export functions
 export function addGroundTruth(gt) {
     gtFrames.push(gt);
     if (stepController) {
@@ -323,7 +327,7 @@ export function checkDataAndInit() {
         }
         
         // We can get the scene limits once all data is initialized
-        currentGroundPlane = createGroundPlane(sceneLimits);
+        currentGroundPlane = createGroundPlane();
         scene.add(currentGroundPlane);
 
         gtInitialized = true;
@@ -331,121 +335,6 @@ export function checkDataAndInit() {
     else if (!gtInitialized) {
         setTimeout(checkDataAndInit, 100); // Try again in 100ms if not ready
     }
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    const currentClockTime = performance.now();
-    let dt = (currentClockTime - lastClockTime) / 1000;
-    lastClockTime = currentClockTime;
-    if (dt > 0.1) dt = 0.1;
-
-    if (options.play && gtInitialized && gtFrames.length > 0) {
-        timeAccumulator += dt;
-
-        while (gtFrames.length > 0) {
-            const currentFrame = gtFrames[frameIndex];
-            const nextFrameIdx = (frameIndex + 1) % gtFrames.length;
-            const nextFrame = gtFrames[nextFrameIdx];
-            const currentTime = getOsiTimeInSeconds(currentFrame);
-            const nextTime = getOsiTimeInSeconds(nextFrame); 
-
-            let frameDuration = nextTime - currentTime;
-
-            if (frameDuration <= 0 || frameIndex === gtFrames.length - 1) {
-                frameDuration = 0.033; // Default fallback step (e.g., 30fps baseline duration)
-            }
-
-            if (timeAccumulator >= frameDuration) {
-                timeAccumulator -= frameDuration;
-                frameIndex = nextFrameIdx;
-                latestGt = gtFrames[frameIndex];
-
-                updateFromGroundTruth(latestGt);
-                needsSceneUpdate = false;
-            }
-            else {
-                break;
-            }
-        }
-    }
-    else {
-        timeAccumulator = 0;
-    }
-
-    if (needsSceneUpdate && gtInitialized && gtFrames.length > 0) {
-        latestGt = gtFrames[frameIndex]
-        updateFromGroundTruth(latestGt);
-        needsSceneUpdate = false;
-    }
-
-    if (cameraMode == cameraModes.FOLLOW) {
-        followVehicle();
-    }
-
-    if (stepController.getValue() !== frameIndex) {
-        suppressControllerCallback = true;
-        stepController.setValue(frameIndex);
-        suppressControllerCallback = false;
-    }
-
-    orbit.update();
-    renderer.render(scene, camera);
-
-    if (labelRenderer) {
-        labelRenderer.render(scene, camera);
-    }
-}
-
-function getOsiTimeInSeconds(frame) {
-    // Fallback checks in case a frame is missing a timestamp sub-object
-    if (!frame || !frame.timestamp) return 0;
-    
-    const seconds = frame.timestamp.seconds || 0;
-    const nanos = frame.timestamp.nanos || 0;
-    
-    // Convert nanos to fractional seconds and add to whole seconds
-    return seconds + (nanos / 1000000000);
-}
-
-function createGroundPlane(sceneLimits) {
-    const width = sceneLimits.maxX - sceneLimits.minX + 5;
-    const height = sceneLimits.maxY - sceneLimits.minY + 5;
-    const centerX = (sceneLimits.minX + sceneLimits.maxX) / 2;
-    const centerY = (sceneLimits.minY + sceneLimits.maxY) / 2;
-
-    const geometry = new THREE.PlaneGeometry(width, height);
-    
-    // Create a 1x1 canvas texture for the grid line
-    const loader = new THREE.TextureLoader();
-    // Using a data URI for a simple grid pattern so you don't need an external image file
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    // This repeats the texture every 1 meter, 
-    texture.repeat.set(width, height);
-
-    const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 0.2,
-        color: stylingColors.groundPlane,
-        depthWrite: false,
-        side: THREE.DoubleSide
-    });
-
-    const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(centerX, centerY, sceneLimits.minZ - 0.1); // Slightly below lowest z
-
-    return plane;
 }
 
 export function resetScene() {
@@ -496,7 +385,71 @@ export function resetScene() {
     clearUtils();
 }
 
-let lastVehiclePos = new THREE.Vector3();
+// Functions
+function animate() {
+    requestAnimationFrame(animate);
+
+    const currentClockTime = performance.now();
+    let dt = (currentClockTime - lastClockTime) / 1000;
+    lastClockTime = currentClockTime;
+    if (dt > 0.1) dt = 0.1;
+
+    if (options.play && gtInitialized && gtFrames.length > 0) {
+        timeAccumulator += dt;
+
+        while (gtFrames.length > 0) {
+            const currentFrame = gtFrames[frameIndex];
+            const nextFrameIdx = (frameIndex + 1) % gtFrames.length;
+            const nextFrame = gtFrames[nextFrameIdx];
+            const currentTime = getOsiTimeInSeconds(currentFrame.timestamp);
+            const nextTime = getOsiTimeInSeconds(nextFrame.timestamp); 
+
+            let frameDuration = nextTime - currentTime;
+
+            if (frameDuration <= 0 || frameIndex === gtFrames.length - 1) {
+                frameDuration = 0.033; // Default fallback step (e.g., 30fps baseline duration)
+            }
+
+            if (timeAccumulator >= frameDuration) {
+                timeAccumulator -= frameDuration;
+                frameIndex = nextFrameIdx;
+                latestGt = gtFrames[frameIndex];
+
+                updateFromGroundTruth(latestGt);
+                needsSceneUpdate = false;
+            }
+            else {
+                break;
+            }
+        }
+    }
+    else {
+        timeAccumulator = 0;
+    }
+
+    if (needsSceneUpdate && gtInitialized && gtFrames.length > 0) {
+        latestGt = gtFrames[frameIndex]
+        updateFromGroundTruth(latestGt);
+        needsSceneUpdate = false;
+    }
+
+    if (cameraMode == cameraModes.FOLLOW) {
+        followVehicle();
+    }
+
+    if (stepController.getValue() !== frameIndex) {
+        suppressControllerCallback = true;
+        stepController.setValue(frameIndex);
+        suppressControllerCallback = false;
+    }
+
+    orbit.update();
+    renderer.render(scene, camera);
+
+    if (labelRenderer) {
+        labelRenderer.render(scene, camera);
+    }
+}
 
 function followVehicle() {
     if (!cameraVehicle) {
@@ -562,23 +515,6 @@ function stepBackward(steps) {
     needsSceneUpdate = true;
 }
 
-stepController.onChange((value) => {
-    if (suppressControllerCallback) return;
-    frameIndex = Math.floor(value);
-    needsSceneUpdate = true;
-});
-
-const viewer = document.getElementById("viewer");
-
-window.addEventListener('resize', () => {
-    const width = viewer.clientWidth;
-    const height = viewer.clientHeight;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-    labelRenderer.setSize(width, height);
-});
-
 function updateMouse(e) {
     // This returns the canvas position and size in screen space.
     const rect = viewer.getBoundingClientRect();
@@ -602,7 +538,15 @@ function setEmissive(mesh, colorHex) {
     }
 }
 
+// Events //
+// stepcontroller
+stepController.onChange((value) => {
+    if (suppressControllerCallback) return;
+    frameIndex = Math.floor(value);
+    needsSceneUpdate = true;
+});
 
+// viewer
 viewer.addEventListener("mousemove", (e) => {
 
     if (!rayCaster) return;
@@ -639,8 +583,6 @@ viewer.addEventListener("mousemove", (e) => {
     }
 
 });
-
-let pressedMesh = null; // Temporary storage for the "down" phase
 
 viewer.addEventListener("mousedown", (e) => {
     if (!rayCaster || e.button !== 0) return;
@@ -699,9 +641,17 @@ viewer.addEventListener("mouseup", (e) => {
     pressedMesh = null;
 });
 
-window.addEventListener('keydown', onKeyDown);
+// window
+window.addEventListener('resize', () => {
+    const width = viewer.clientWidth;
+    const height = viewer.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    labelRenderer.setSize(width, height);
+});
 
-function onKeyDown(event) {
+window.addEventListener('keydown', (event) => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Tab'].includes(event.key)) {
         event.preventDefault();
     }
@@ -770,4 +720,5 @@ function onKeyDown(event) {
         case 'Escape':
             options.collapseAndDeselect();
     }
-}
+});
+

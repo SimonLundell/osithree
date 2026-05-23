@@ -730,3 +730,56 @@ function addFlatHoverLabel(mesh, textStr, height) {
      
     mesh.add(labelObject); 
 }
+
+export function getOsiTimeInSeconds(timestamp) {
+    // Fallback checks in case a frame is missing a timestamp sub-object
+    if (!timestamp) return 0;
+    
+    const seconds = timestamp.seconds || 0;
+    const nanos = timestamp.nanos || 0;
+    
+    // Convert nanos to fractional seconds and add to whole seconds
+    return seconds + (nanos / 1000000000);
+}
+
+export function createGroundPlane() {
+    if (sceneLimits.maxX === Infinity || sceneLimits.minX === -Infinity || sceneLimits.maxY === Infinity || sceneLimits.minY === -Infinity || sceneLimits.minZ === -Infinity) return;
+
+    const width = sceneLimits.maxX - sceneLimits.minX + 5;
+    const height = sceneLimits.maxY - sceneLimits.minY + 5;
+    const centerX = (sceneLimits.minX + sceneLimits.maxX) / 2;
+    const centerY = (sceneLimits.minY + sceneLimits.maxY) / 2;
+
+    const geometry = new THREE.PlaneGeometry(width, height);
+    
+    // Create a 1x1 canvas texture for the grid line
+    const loader = new THREE.TextureLoader();
+    // Using a data URI for a simple grid pattern so you don't need an external image file
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    // This repeats the texture every 1 meter, 
+    texture.repeat.set(width, height);
+
+    const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0.2,
+        color: stylingColors.groundPlane,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+
+    const plane = new THREE.Mesh(geometry, material);
+    plane.position.set(centerX, centerY, sceneLimits.minZ - 0.1); // Slightly below lowest z
+
+    return plane;
+}
+
