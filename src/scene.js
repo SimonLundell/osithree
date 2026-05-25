@@ -205,21 +205,37 @@ export const options = {
 
 let stepController = gui.add(options, 'step', 0, 1).step(1);
 gui.add(options, 'togglePlay').name('Play / Pause (space)');
-gui.add(options, 'toggleCameraMode').name('Toggle follow (1) / free (2) camera mode');
-gui.add(options, 'toggleInfoLabel').name('Toggle hovering label (i)');
-gui.add(options, 'resetCamera').name('Reset camera position (r)');
-gui.add(options, 'toggleGroundPlane').name('Toggle grid (g)');
-gui.add(options, 'toggleClearColor').name('Toggle dark/bright backround (c)');
-gui.add(options, 'collapseAndDeselect').name("Remove selection & collapse tree (esc)");
-gui.add(options, 'removeSelection').name("Remove selection (q)");
-gui.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
-gui.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
-gui.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
-gui.add(options, 'toggleViewMode').name('Toggle moving object view mode (,)');
 
-// Manual Input Fields
-gui.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
-const folder = gui.addFolder('Axes Position');
+const sceneFolder = gui.addFolder("Helpful settings");
+sceneFolder.add(options, 'toggleInfoLabel').name('Toggle hovering label (i)');
+sceneFolder.add(options, 'toggleCameraMode').name('Toggle follow (1) / free (2) camera mode');
+sceneFolder.add(options, 'resetCamera').name('Reset camera position (r)');
+sceneFolder.add(options, 'collapseAndDeselect').name("Remove selection & collapse tree (esc)");
+sceneFolder.add(options, 'removeSelection').name("Remove selection (q)");
+
+const cosmeticsFolder = gui.addFolder("Visualization settings")
+cosmeticsFolder.add(options, 'toggleGroundPlane').name('Toggle grid (g)');
+cosmeticsFolder.add(options, 'toggleClearColor').name('Toggle dark/bright backround (c)');
+cosmeticsFolder.add(options, 'toggleWireframe').name('Toggle wireframe (w)');
+cosmeticsFolder.add(options, 'toggleOsiPoints').name('Toggle osi-points (p)');
+cosmeticsFolder.add(options, 'toggleBoundaries').name('Toggle osi-boundaries (b)');
+cosmeticsFolder.add(options, 'toggleViewMode').name('Toggle moving object view mode (,)');
+
+// Helpers
+axesHelper = new THREE.AxesHelper(1);
+scene.add(axesHelper);
+axesHelper.visible = options.aHelper;
+const axesFolder = gui.addFolder('AxesHelper settings');
+axesFolder.add(options, 'toggleAxisHelper').name('Toggle axes-helper (a)');
+axesFolder.add({ x: "0" }, 'x').name('X').onFinishChange(value => { axesHelper.position.x = parseFloat(value) || 0; });
+axesFolder.add({ y: "0" }, 'y').name('Y').onFinishChange(value => { axesHelper.position.y = parseFloat(value) || 0; });
+axesFolder.add({ z: "0" }, 'z').name('Z').onFinishChange(value => { axesHelper.position.z = parseFloat(value) || 0; });
+axesFolder.add({ h: "0" }, 'h').name('H').onFinishChange(value => { axesHelper.rotation.z = parseFloat(value) || 0; });
+axesFolder.add({ p: "0" }, 'p').name('P').onFinishChange(value => { axesHelper.rotation.y = parseFloat(value) || 0; });
+axesFolder.add({ r: "0" }, 'r').name('R').onFinishChange(value => { axesHelper.rotation.x = parseFloat(value) || 0; });
+axesFolder.add({ size: "1" }, 'size').name('Size').onFinishChange(value => { const s = parseFloat(value) || 1; 
+    axesHelper.scale.set(s, s, s) });
+
 
 // Export functions
 export function addGroundTruth(gt) {
@@ -290,15 +306,6 @@ export function setupScene() {
 
     // Raycaster
     rayCaster = new THREE.Raycaster();
-
-    // Helpers
-    axesHelper = new THREE.AxesHelper(1000);
-    scene.add(axesHelper);
-    axesHelper.visible = options.aHelper;
-
-    folder.add({ x: "0" }, 'x').name('X').onFinishChange(value => { axesHelper.position.x = parseFloat(value) || 0; });
-    folder.add({ y: "0" }, 'y').name('Y').onFinishChange(value => { axesHelper.position.y = parseFloat(value) || 0; });
-    folder.add({ z: "0" }, 'z').name('Z').onFinishChange(value => { axesHelper.position.z = parseFloat(value) || 0; });
 
     // OSI
     osiRoot.add(osiPoints);
