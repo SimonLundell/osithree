@@ -183,20 +183,21 @@ function initLaneBoundaries(laneBoundaries) {
         });
         
         let width = -1;
-        if (boundary.boundaryLine[0].width != 0) {
+        if (boundary.boundaryLine[0].width !== 0) {
             width = boundary.boundaryLine[0].width; // Assume all lines are same width
         }
 
         const type = boundary.classification.type;
         let color = null;
-        if (boundary.classification.color == 0) {
-            if (type == 2) { // INVISIBLE
+        let isRoadLine = (type === 3 || type === 4);
+        if (boundary.classification.color === 0) {
+            if (type === 2) { // INVISIBLE
                 color = laneBoundaryColor.get(8);
             } 
-            else if (type == 3 || type == 4) { // SOLID or DASHED
+            else if (isRoadLine) { // SOLID or DASHED
                 color = laneBoundaryColor.get(3); // WHITE
             }
-            else if (type == 6) { // ROAD_EDGE
+            else if (type === 6) { // ROAD_EDGE
                 color = laneBoundaryColor.get(6); // BLUE
             }
             else { // ALL ELSE
@@ -208,8 +209,9 @@ function initLaneBoundaries(laneBoundaries) {
         }
         
         let geometry = null;
-        if (type == 4) { // DASHED LINES
-            geometry = buildDashedStripGeometry(points, width, 0.015); // slightly above 
+
+        if (isRoadLine) { // ROAD LINES
+            geometry = buildDashedStripGeometry(points, width); // slightly above
         }
         else {
             geometry = buildStripGeometry(points, width);
@@ -217,13 +219,24 @@ function initLaneBoundaries(laneBoundaries) {
 
         const material = new THREE.MeshStandardMaterial({
             color: color,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthTest: true
         });
+
+        if (isRoadLine) {
+            material.polygonOffset = true;
+            material.polygonOffsetFactor = -1; // Negative pushes the geometry toward the camera in depth calculations
+            material.polygonOffsetUnits = -4; // Helps resolve fine-grained precision overlapping
+        }
 
         const strip = new THREE.Mesh(geometry, material);
         
+        if (isRoadLine) {
+            strip.renderOrder = 1; // Default for normal objects is 0
+        }
+
         // We want to be able to toggle any boundary that isn't solid or dashed line
-        if (type == 3 || type == 4) {
+        if (isRoadLine) {
             osiRoadMarkBoundaries.add(strip);
             osiRoadMarkBoundaries.userData.meshes.push(strip);
         }
@@ -577,7 +590,7 @@ function refPoint(size) {
 function buildDashedStripGeometry(
     points,
     width,
-    zOffset = 0.01
+    zOffset = 0.0
 ) {
     if (width == -1) {
         width = 0.1
@@ -626,7 +639,7 @@ function buildDashedStripGeometry(
     return geometry;
 }
 
-function buildStripGeometry(points, width, zOffset = 0.01) {
+function buildStripGeometry(points, width, zOffset = 0.0) {
     if (width == -1) {
         width = 0.1
     }
