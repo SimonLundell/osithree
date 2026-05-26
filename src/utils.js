@@ -494,6 +494,13 @@ function updateTrafficLight(tl) {
 }
 
 function removeObj(id, mesh) {
+    const label = mesh.getObjectByName('hoverLabel2D');
+    if (label && label.element) {
+        if (label.element.parentNode) {
+            label.element.parentNode.removeChild(label.element);
+        }
+        label.element = null;
+    }
     movingObjectMap.delete(id);
     osiMovingObjects.remove(mesh);
     const index = clickableMeshes.indexOf(mesh);
@@ -732,7 +739,7 @@ function addFlatHoverLabel(mesh, textStr, height) {
     // Position it at the roof line of the car bounding box
     labelObject.position.set(0, 0, (height / 2)); 
     labelObject.name = 'hoverLabel2D'; 
-    labelObject.visible = false;
+    labelObject.visible = options.infoLabel;
      
     mesh.add(labelObject); 
 }

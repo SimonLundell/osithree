@@ -154,12 +154,13 @@ export const options = {
         });
     },
 
+    infoLabel: false,
     toggleInfoLabel() {
         osiMovingObjects.userData.meshes.forEach(mesh => {
-
             mesh.traverse(child => {
                 if (child.name === "hoverLabel2D") {
                     child.visible = !child.visible;
+                    this.infoLabel = child.visible;
                 }
             });
         });
@@ -376,8 +377,23 @@ export function resetScene() {
     selectedMesh = null;
     lastClockTime = performance.now();
     timeAccumulator = 0;
+    options.play = false;
 
     stepController.setValue(frameIndex);
+
+    [osiPoints, osiMovingObjects].forEach(group => {
+        if (!group) return;
+        group.traverse((child) => {
+            if (child.name === 'hoverLabel2D' && child.element) {
+                // Force the browser to cleanly unmount the HTML div layer from the viewport
+                if (child.element.parentNode) {
+                    child.element.parentNode.removeChild(child.element);
+                }
+                // Nullify element reference to prevent lingering garbage collection leaks
+                child.element = null; 
+            }
+        });
+    });
 
     osiPoints.clear();
     osiBoundaries.clear();
