@@ -731,8 +731,8 @@ function addFlatHoverLabel(mesh, textStr, height) {
     // Style the actual text block
     textElement.style.color = '#eefe0c'; 
     textElement.style.fontFamily = 'sans-serif'; 
-    textElement.style.fontSize = '12px'; 
-    textElement.style.fontWeight = '650'; 
+    textElement.style.fontSize = '11px'; 
+    textElement.style.fontWeight = '550'; 
     textElement.style.userSelect = 'none'; 
     textElement.style.whiteSpace = 'pre-line'; 
     textElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';  

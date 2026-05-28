@@ -67,5 +67,6 @@ export const dynamicRoots = [
     "timestamp",
     "environmentalConditions",
     "movingObject",
-    "trafficLight"
+    "trafficLight",
+    "occupant"
 ];
