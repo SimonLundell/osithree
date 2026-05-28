@@ -105,6 +105,7 @@ function createNode(key, data) {
             parentLi.classList.toggle("open");
 
             if (e.shiftKey) {
+                window.getSelection().removeAllRanges(); // remove potential selection from shift+click
                 const childNodes = parentLi.querySelectorAll("li.node");
                 childNodes.forEach(child => {
                     if (isOpening) {
