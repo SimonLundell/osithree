@@ -54,7 +54,7 @@ Visit the deployed version at: **[placeholder: https://osithree.pages.dev](https
 - 🧪 Tested with Vitest (rudimentary)
 
 ## Generate .osi files
-This project was built using .osi files generated from [esmini](https://github.com/esmini/esmini)
+This project was built and tested using .osi files generated from [esmini](https://github.com/esmini/esmini)
 
 ## Disclaimers
 - This is a hobby project
