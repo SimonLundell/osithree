@@ -4,7 +4,7 @@ A lightweight, three.js powered, browser-based visualizer for OpenSimulationInte
 
 ## Website
 
-Visit the deployed version at: **[placeholder: https://osithree.pages.dev](https://osithree.pages.dev)**
+Visit the deployed version at: **[https://osithree.pages.dev](https://osithree.pages.dev)**
 
 ## Getting Started
 
@@ -13,7 +13,7 @@ Visit the deployed version at: **[placeholder: https://osithree.pages.dev](https
 1. **Clone the repository**
    ```bash
    git clone https://github.com/SimonLundell/osithree.git
-   cd osi-viewer
+   cd osithree
    ```
 
 2. **Install dependencies**

@@ -342,8 +342,6 @@ export function checkDataAndInit() {
         const firstGt = gtFrames[0];
         initFromGroundTruth(firstGt);
      
-        console.log(firstGt);
-     
         cameraVehicle = movingObjectMap.get(hostVehicleId);
         if (cameraVehicle) {
             resetFollowCamera();

@@ -37,7 +37,7 @@ describe("osiDecoder", () => {
     const mockDecode = vi.fn().mockReturnValue({ frame: true });
     mockLoad.mockResolvedValue({ lookupType: () => ({ decode: mockDecode }) });
 
-    const { decodeOSIFile } = await import("../osiDecoder.js");
+      const { decodeOSIFile } = await import("../osidecoder.js");
 
     const file = new Uint8Array([4, 0, 0, 0, 1, 2, 3, 4]).buffer;
     let frameReceived = null;
@@ -57,7 +57,7 @@ describe("osiDecoder", () => {
     mockLoad.mockResolvedValue({ lookupType: () => ({ decode: mockDecode }) });
 
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { decodeOSIFile } = await import("../osiDecoder.js");
+    const { decodeOSIFile } = await import("../osidecoder.js");
 
     const invalidFile = new Uint8Array([255, 255, 255, 255]).buffer;
     decodeOSIFile(invalidFile, () => {});

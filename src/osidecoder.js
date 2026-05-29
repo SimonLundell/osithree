@@ -3,7 +3,7 @@ import protobuf from "protobufjs";
 let GroundTruthType = null;
 
 export async function loadSchema() {
-  const root = await protobuf.load("/src/proto/osi_groundtruth.proto");
+  const root = await protobuf.load("/proto/osi_groundtruth.proto");
   GroundTruthType = root.lookupType("osi3.GroundTruth");
   console.log("OSI GroundTruth schema loaded");
   document.getElementById("fileInput").disabled = false;

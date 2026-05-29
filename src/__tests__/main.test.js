@@ -6,7 +6,7 @@ const mockResetScene = vi.fn();
 const mockAddGroundTruth = vi.fn();
 const mockCheckDataAndInit = vi.fn();
 
-vi.mock("../osiDecoder.js", () => ({
+vi.mock("../osidecoder.js", () => ({
   decodeOSIFile: mockDecodeOSIFile
 }));
 

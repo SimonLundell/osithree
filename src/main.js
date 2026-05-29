@@ -1,6 +1,6 @@
 // npm run dev
 
-import { decodeOSIFile } from "./osiDecoder.js";
+import { decodeOSIFile } from "./osidecoder.js";
 import { setupScene, addGroundTruth, resetScene, checkDataAndInit } from "./scene.js";
 
 setupScene();
@@ -19,7 +19,7 @@ function processOSIFile(file) {
 }
 
 function loadDefaultFile() {
-  const defaultFile = "../examples/traffic_lights.osi";
+  const defaultFile = "./traffic_lights.osi";
   fileName.textContent = "Loading default simulation...";
 
   fetch(defaultFile).then(response => {
