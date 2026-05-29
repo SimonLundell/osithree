@@ -696,14 +696,31 @@ viewer.addEventListener("mouseup", (e) => {
 });
 
 // window
-window.addEventListener('resize', () => {
-    const width = viewer.clientWidth;
-    const height = viewer.clientHeight;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-    labelRenderer.setSize(width, height);
+// Initialize a ResizeObserver to watch 3D viewer container element directly
+const resizeObserver = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+        // Capture the brand new bounding dimensions of the viewer element
+        const width = entry.contentRect.width;
+        const height = entry.contentRect.height;
+
+        if (width === 0 || height === 0) return;
+
+        // 1. Update Camera Projection matrix to prevent squishing
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        // 2. Update WebGL Canvas sizing
+        renderer.setSize(width, height);
+
+        // 3. Force the CSS2D Label Layer to snap instantly into place
+        if (labelRenderer) {
+            labelRenderer.setSize(width, height);
+        }
+    }
 });
+
+// Start actively monitoring 3D viewer element
+resizeObserver.observe(viewer);
 
 window.addEventListener('keydown', (event) => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Tab'].includes(event.key)) {
