@@ -43,7 +43,7 @@ describe("main module", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(fetch).toHaveBeenCalledWith("../examples/traffic_lights.osi");
+    expect(fetch).toHaveBeenCalledWith("./traffic_lights.osi");
     expect(document.getElementById("fileName").textContent).toBe("traffic_lights.osi (default)");
   });
 
