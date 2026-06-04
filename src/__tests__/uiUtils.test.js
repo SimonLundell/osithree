@@ -163,6 +163,36 @@ describe("uiUtils", () => {
     expect(segmentLi.classList.contains("open")).toBe(true);
   });
 
+  it("ctrl-click on a topic expands all subnodes", () => {
+    document.body.innerHTML = `
+      <ul id="gtTree"></ul>
+    `;
+
+    initTree({
+      laneBoundary: [
+        {
+          boundaryLine: [
+            { position: { x: -95.10893440828659, y: -20.438206710852683 } },
+            { position: { x: 0, y: 0 } }
+          ],
+          width: 0.12,
+          height: 0.02
+        }
+      ]
+    });
+
+    const topic = document.querySelector("#gtTree > li[data-node-key='laneBoundary']");
+    const caret = topic.querySelector("span.caret");
+
+    // Simulate Ctrl+click on the topic to expand all descendants
+    caret.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true }));
+
+    const allDescendants = topic.querySelectorAll("li.node");
+    // Every descendant should now have the 'open' class
+    const unopened = Array.from(allDescendants).filter(n => !n.classList.contains("open"));
+    expect(unopened.length).toBe(0);
+  });
+
   // Ensure collapseTree closes every expanded branch and resets scroll position.
   it("collapses all open nodes in the tree", () => {
     const tree = document.getElementById("gtTree");

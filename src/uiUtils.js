@@ -113,6 +113,17 @@ function createNode(key, data) {
             e.preventDefault();
             e.stopPropagation();
             const parentLi = e.currentTarget.parentElement;
+
+            // Ctrl+click: always expand every descendant under this node (topic-level usecase)
+            if (e.ctrlKey) {
+                window.getSelection().removeAllRanges();
+                parentLi.classList.add("open");
+                const descendants = parentLi.querySelectorAll("li.node");
+                descendants.forEach(d => d.classList.add("open"));
+                if (!options.play && latestGt) updateTree(latestGt);
+                return;
+            }
+
             const isOpening = !parentLi.classList.contains("open");
 
             parentLi.classList.toggle("open");
