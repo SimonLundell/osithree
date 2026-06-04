@@ -208,15 +208,6 @@ function initLaneBoundaries(laneBoundaries) {
             color = laneBoundaryColor.get(boundary.classification.color);
         }
         
-        let geometry = null;
-
-        if (isRoadLine) { // ROAD LINES
-            geometry = buildDashedStripGeometry(points, width); // slightly above
-        }
-        else {
-            geometry = buildStripGeometry(points, width);
-        }
-
         const material = new THREE.MeshStandardMaterial({
             color: color,
             side: THREE.DoubleSide,
@@ -227,25 +218,28 @@ function initLaneBoundaries(laneBoundaries) {
             material.polygonOffset = true;
             material.polygonOffsetFactor = -1; // Negative pushes the geometry toward the camera in depth calculations
             material.polygonOffsetUnits = -4; // Helps resolve fine-grained precision overlapping
-        }
 
-        const strip = new THREE.Mesh(geometry, material);
-        
-        if (isRoadLine) {
-            strip.renderOrder = 1; // Default for normal objects is 0
-        }
+            for (let i = 0; i < points.length - 1; i += 2) {
+                const segmentGeometry = buildStripGeometry([points[i], points[i + 1]], width);
+                const segmentMaterial = material.clone();
+                const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+                segment.renderOrder = 1; // Default for normal objects is 0
 
-        // We want to be able to toggle any boundary that isn't solid or dashed line
-        if (isRoadLine) {
-            osiRoadMarkBoundaries.add(strip);
-            osiRoadMarkBoundaries.userData.meshes.push(strip);
+                const boundaryLineIndex = i / 2;
+                segment.userData.boundaryLineIndex = boundaryLineIndex;
+
+                osiRoadMarkBoundaries.add(segment);
+                osiRoadMarkBoundaries.userData.meshes.push(segment);
+                setClickable("laneBoundary", boundary, segment);
+            }
         }
         else {
+            const geometry = buildStripGeometry(points, width);
+            const strip = new THREE.Mesh(geometry, material);
             osiBoundaries.add(strip);
             osiBoundaries.userData.meshes.push(strip);
+            setClickable("laneBoundary", boundary, strip);
         }
-
-        setClickable("laneBoundary", boundary, strip);
     });
 }
 

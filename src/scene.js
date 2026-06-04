@@ -676,7 +676,7 @@ viewer.addEventListener("mouseup", (e) => {
                 if (!e.shiftKey) {
                     collapseTree();
                 }
-                focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId);
+                focusAndExpandObject(selectedMesh.userData.topic, selectedMesh.userData.osiId, selectedMesh.userData);
                 updateTree(latestGt); // Ensure update if we click an object
             }
             else { // Its a osi point

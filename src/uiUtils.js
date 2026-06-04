@@ -1,7 +1,7 @@
 import { options, latestGt } from "./scene";
 import { GT_ORDER, AUTO_EXPAND, dynamicRoots } from "./constants";
 
-export function focusAndExpandObject(topic, osiId) {
+export function focusAndExpandObject(topic, osiId, opts = {}) {
     const topicLi = document.querySelector(`#gtTree > li[data-node-key='${topic}']`);
     if (!topicLi) return;
 
@@ -33,15 +33,28 @@ export function focusAndExpandObject(topic, osiId) {
     }
 
     if (targetIndexLi) {
-        // ... (Expansion logic)
+        // Open the topic and the selected index.
         topicLi.classList.add("open");
         targetIndexLi.classList.add("open");
 
-        // Expand sub-properties
-        const nestedNodes = targetIndexLi.querySelectorAll("li.node");
-        nestedNodes.forEach(n => n.classList.add("open"));
+        // Expand the selected object's direct child fields only.
+        // This reveals properties like id, sourceReference, classification, boundaryLine, etc.
+        const directChildren = targetIndexLi.querySelectorAll(":scope > ul > li.node");
+        directChildren.forEach(child => child.classList.add("open"));
 
-        // Use 'center' block to ensure the item isn't at the very bottom edge
+        // If this is a roadmark segment, open the matching boundaryLine entry.
+        if (opts.boundaryLineIndex !== undefined) {
+            const boundaryLineLi = targetIndexLi.querySelector(":scope > ul > li[data-node-key='boundaryLine']");
+            if (boundaryLineLi) {
+                boundaryLineLi.classList.add("open");
+                const segmentLi = boundaryLineLi.querySelector(`:scope > ul > li[data-node-key='[${opts.boundaryLineIndex}]']`);
+                if (segmentLi) {
+                    segmentLi.classList.add("open");
+                }
+            }
+        }
+
+        // Use 'nearest' to avoid scrolling the selected item to the very bottom.
         targetIndexLi.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         
         targetIndexLi.classList.add("updated-flash");
