@@ -45,6 +45,12 @@ Visit the deployed version at: **[https://osithree.pages.dev](https://osithree.p
 - Rotate/zoom the 3D view with your mouse
 - Use dat.GUI controls to adjust visualization settings
 
+### Interaction hints
+
+- **Shift+click (object/topic):** keep the current expansion open when revealing the clicked node.
+- **Ctrl+click (topic):** expand all descendant subnodes under the clicked topic.
+- **Click (topic/object):** expand the base nodes for the clicked item and collapse other branches.
+
 ## Features
 
 - 📦 Decode protobuf-based OSI messages
