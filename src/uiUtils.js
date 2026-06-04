@@ -47,9 +47,13 @@ export function focusAndExpandObject(topic, osiId, opts = {}) {
             const boundaryLineLi = targetIndexLi.querySelector(":scope > ul > li[data-node-key='boundaryLine']");
             if (boundaryLineLi) {
                 boundaryLineLi.classList.add("open");
-                const segmentLi = boundaryLineLi.querySelector(`:scope > ul > li[data-node-key='[${opts.boundaryLineIndex}]']`);
-                if (segmentLi) {
-                    segmentLi.classList.add("open");
+                const firstSegmentLi = boundaryLineLi.querySelector(`:scope > ul > li[data-node-key='[${opts.boundaryLineIndex}]']`);
+                const secondSegmentLi = boundaryLineLi.querySelector(`:scope > ul > li[data-node-key='[${opts.boundaryLineIndex + 1}]']`);
+                if (firstSegmentLi) {
+                    firstSegmentLi.classList.add("open");
+                }
+                if (secondSegmentLi) {
+                    secondSegmentLi.classList.add("open");
                 }
             }
         }

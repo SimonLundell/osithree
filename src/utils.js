@@ -225,7 +225,7 @@ function initLaneBoundaries(laneBoundaries) {
                 const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
                 segment.renderOrder = 1; // Default for normal objects is 0
 
-                const boundaryLineIndex = i / 2;
+                const boundaryLineIndex = i;
                 segment.userData.boundaryLineIndex = boundaryLineIndex;
 
                 osiRoadMarkBoundaries.add(segment);
